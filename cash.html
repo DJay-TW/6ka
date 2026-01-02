@@ -182,15 +182,15 @@
   <div class="wrap">
     <div class="card">
       <div class="title">
-        <h1>金額差異（B − A）</h1>
+        <h1>找零箱金額差異計算機</h1>
         <div class="chip" id="status">Ready</div>
       </div>
 
       <div class="hdr">
         <div></div>
-        <div style="padding-left:4px;">A</div>
-        <div style="text-align:center;">＝</div>
-        <div style="padding-left:4px;">B</div>
+        <div style="padding-left:4px;">A(系統)</div>
+        <div style="text-align:center;">：</div>
+        <div style="padding-left:4px;">B(實際)</div>
       </div>
 
       <div class="grid" id="rows"></div>
@@ -203,7 +203,6 @@
       <textarea id="out" readonly spellcheck="false"></textarea>
 
       <div class="small">
-        <span>輸出已改成 LINE 友善短行（避免被折行）</span>
         <span>按「＝」可把 A 直接帶到 B</span>
       </div>
     </div>
@@ -312,7 +311,7 @@
     let bTotal = 0;
 
     const lines = [];
-    lines.push("金額差異（B − A）");
+    lines.push("金額差異（實際 − 系統）");
 
     denoms.forEach(denom => {
       const aQty = getQty(denom, "a");
@@ -329,9 +328,9 @@
 
     const dTotal = bTotal - aTotal;
     lines.push("");
-    lines.push(`A ${fmtMoney(aTotal)}`);
-    lines.push(`B ${fmtMoney(bTotal)}`);
-    lines.push(`d ${fmtMoney(dTotal)}`);
+    lines.push(`系統 ${fmtMoney(aTotal)}`);
+    lines.push(`實際 ${fmtMoney(bTotal)}`);
+    lines.push(`差值 ${fmtMoney(dTotal)}`);
 
     outEl.value = lines.join("\n");
   }
