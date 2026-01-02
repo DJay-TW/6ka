@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Cash Diff</title>
+  <style>
+    :root{
+      --bg:#0b0c0f;
+      --panel:#11131a;
+      --panel2:#0f1117;
+      --border:#242736;
+      --text:#e9ebf2;
+      --muted:#a6abbd;
+      --muted2:#7b8094;
+      --good:#8ce99a;
+      --bad:#ff8787;
+      --shadow: 0 10px 25px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: radial-gradient(1200px 700px at 20% -10%, rgba(255,255,255,.06), transparent 55%),
+                  radial-gradient(900px 500px at 90% 0%, rgba(255,255,255,.05), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      padding: 18px 14px 22px;
+    }
+    .wrap{
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      margin: 4px 0 14px;
+    }
+    .title{
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: .2px;
+      line-height:1.15;
+    }
+    .subtitle{
+      font-size: 13px;
+      color: var(--muted2);
+      margin-top: 6px;
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    /* table */
+    .grid{
+      width:100%;
+      border-collapse: collapse;
+    }
+    .grid thead th{
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: .2px;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .grid tbody td{
+      padding: 10px;
+      border-bottom: 1px solid rgba(36,39,54,.7);
+      vertical-align: middle;
+    }
+    .denom{
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: .2px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .in{
+      width: 100%;
+      appearance: none;
+      border: 1px solid rgba(36,39,54,.9);
+      background: rgba(10,12,16,.55);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-size: 18px;
+      font-weight: 700;
+      outline: none;
+    }
+    .in:focus{
+      border-color: rgba(233,235,242,.35);
+      box-shadow: 0 0 0 4px rgba(233,235,242,.08);
+    }
+    .diff{
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .muted{
+      color: var(--muted2);
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: .2px;
+    }
+
+    .footer{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: stretch;
+      padding: 14px;
+      background: rgba(255,255,255,.02);
+    }
+    .totals{
+      flex: 1 1 320px;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .pill{
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      border-radius: 16px;
+      padding: 12px 12px;
+      min-height: 58px;
+      display:flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+    }
+    .pill .v{
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+
+    .actions{
+      flex: 1 1 220px;
+      display:flex;
+      gap: 10px;
+      align-items: stretch;
+      justify-content: flex-end;
+    }
+    button{
+      width: 100%;
+      border: 1px solid rgba(233,235,242,.18);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      color: var(--text);
+      border-radius: 16px;
+      padding: 14px 14px;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      cursor: pointer;
+      transition: transform .06s ease, border-color .12s ease, background .12s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active{ transform: translateY(1px) scale(.995); }
+    .btn-secondary{
+      border-color: rgba(233,235,242,.12);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+    }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(15,17,23,.92);
+      border: 1px solid rgba(233,235,242,.16);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    /* mobile */
+    @media (max-width: 520px){
+      .title{ font-size: 20px; }
+      .grid thead th{ font-size: 12px; padding: 10px 8px; }
+      .grid tbody td{ padding: 9px 8px; }
+      .denom{ font-size: 15px; }
+      .in{ font-size: 18px; padding: 12px 10px; }
+      .diff{ font-size: 18px; }
+      .totals{ grid-template-columns: 1fr; }
+      .actions{ width: 100%; }
+      button{ font-size: 16px; padding: 14px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="title">金額差異計算</div>
+        <div class="subtitle">A：系統顯示　B：找零箱實際　差值 = B − A</div>
+      </div>
+    </header>
+
+    <div class="card">
+      <table class="grid" aria-label="cash table">
+        <thead>
+          <tr>
+            <th style="width: 22%;">面額</th>
+            <th style="width: 26%;">A 數量</th>
+            <th style="width: 26%;">B 數量</th>
+            <th style="width: 26%; text-align:right;">差值金額</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+
+      <div class="footer">
+        <div class="totals">
+          <div class="pill">
+            <div class="muted">A 總金額</div>
+            <div class="v" id="totalA">$0</div>
+          </div>
+          <div class="pill">
+            <div class="muted">B 總金額</div>
+            <div class="v" id="totalB">$0</div>
+          </div>
+          <div class="pill">
+            <div class="muted">總差值（B − A）</div>
+            <div class="v" id="totalDiff">$0</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="copyBtn">複製結果</button>
+          <button class="btn-secondary" id="clearBtn" title="清空所有欄位">清空</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">已複製</div>
+
+  <script>
+    (function(){
+      const denoms = [500, 100, 50, 10, 5, 1];
+      const rowsEl = document.getElementById('rows');
+
+      const fmt = (n) => {
+        const sign = n < 0 ? "-" : "";
+        n = Math.abs(n);
+        return sign + "$" + n.toLocaleString("en-US");
+      };
+
+      const clampInt = (v) => {
+        // 空字串當 0；其餘取整數；負數允許（方便你用來校正），但通常不需要
+        if (v === "" || v == null) return 0;
+        const x = Number(v);
+        if (!Number.isFinite(x)) return 0;
+        return Math.trunc(x);
+      };
+
+      const makeRow = (d) => {
+        const tr = document.createElement('tr');
+
+        const tdDen = document.createElement('td');
+        tdDen.innerHTML = `<div class="denom">$${d}</div>`;
+        tr.appendChild(tdDen);
+
+        const tdA = document.createElement('td');
+        tdA.innerHTML = `<input class="in" inputmode="numeric" pattern="-?[0-9]*" id="a_${d}" placeholder="0" />`;
+        tr.appendChild(tdA);
+
+        const tdB = document.createElement('td');
+        tdB.innerHTML = `<input class="in" inputmode="numeric" pattern="-?[0-9]*" id="b_${d}" placeholder="0" />`;
+        tr.appendChild(tdB);
+
+        const tdDiff = document.createElement('td');
+        tdDiff.style.textAlign = "right";
+        tdDiff.innerHTML = `<div class="diff" id="diff_${d}">$0</div>`;
+        tr.appendChild(tdDiff);
+
+        return tr;
+      };
+
+      denoms.forEach(d => rowsEl.appendChild(makeRow(d)));
+
+      const totalAEl = document.getElementById('totalA');
+      const totalBEl = document.getElementById('totalB');
+      const totalDiffEl = document.getElementById('totalDiff');
+
+      const getQty = (prefix, d) => clampInt(document.getElementById(prefix + "_" + d).value.trim());
+
+      const compute = () => {
+        let totalA = 0, totalB = 0, totalDiff = 0;
+
+        for (const d of denoms){
+          const a = getQty("a", d);
+          const b = getQty("b", d);
+          const amountA = a * d;
+          const amountB = b * d;
+          const diff = amountB - amountA;
+
+          totalA += amountA;
+          totalB += amountB;
+          totalDiff += diff;
+
+          const diffEl = document.getElementById("diff_" + d);
+          diffEl.textContent = fmt(diff);
+
+          // 顏色提示：正差綠、負差紅、0 灰（不額外提示文字，只有色彩）
+          diffEl.style.color = diff > 0 ? "var(--good)" : (diff < 0 ? "var(--bad)" : "var(--text)");
+          diffEl.style.opacity = diff === 0 ? 0.85 : 1;
+        }
+
+        totalAEl.textContent = fmt(totalA);
+        totalBEl.textContent = fmt(totalB);
+        totalDiffEl.textContent = fmt(totalDiff);
+        totalDiffEl.style.color = totalDiff > 0 ? "var(--good)" : (totalDiff < 0 ? "var(--bad)" : "var(--text)");
+        totalDiffEl.style.opacity = totalDiff === 0 ? 0.85 : 1;
+      };
+
+      // 即時更新
+      denoms.forEach(d => {
+        ["a_", "b_"].forEach(p => {
+          const el = document.getElementById(p + d);
+          el.addEventListener('input', compute);
+          el.addEventListener('blur', () => {
+            // 把非數字清掉（避免有人打進奇怪東西）
+            const v = el.value.trim();
+            if (v === "") return;
+            el.value = String(clampInt(v));
+            compute();
+          });
+        });
+      });
+
+      const toast = (msg) => {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(window.__toastTimer);
+        window.__toastTimer = setTimeout(() => t.classList.remove("show"), 1200);
+      };
+
+      const buildCopyText = () => {
+        const lines = [];
+        lines.push("金額差異（B − A）");
+        for (const d of denoms){
+          const a = getQty("a", d);
+          const b = getQty("b", d);
+          const diff = (b - a) * d;
+          lines.push(`$${d}: A=${a}, B=${b}, Diff=${fmt(diff)}`);
+        }
+        const totalA = denoms.reduce((s,d)=> s + getQty("a", d)*d, 0);
+        const totalB = denoms.reduce((s,d)=> s + getQty("b", d)*d, 0);
+        const totalDiff = totalB - totalA;
+        lines.push(`A Total: ${fmt(totalA)}`);
+        lines.push(`B Total: ${fmt(totalB)}`);
+        lines.push(`Diff Total: ${fmt(totalDiff)}`);
+        return lines.join("\n");
+      };
+
+      document.getElementById("copyBtn").addEventListener("click", async () => {
+        const text = buildCopyText();
+        try{
+          await navigator.clipboard.writeText(text);
+          toast("已複製結果");
+        }catch(e){
+          // fallback
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.left = "-9999px";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+          toast("已複製結果");
+        }
+      });
+
+      document.getElementById("clearBtn").addEventListener("click", () => {
+        denoms.forEach(d => {
+          document.getElementById("a_" + d).value = "";
+          document.getElementById("b_" + d).value = "";
+        });
+        compute();
+        toast("已清空");
+      });
+
+      // init
+      compute();
+    })();
+  </script>
+</body>
+</html>
