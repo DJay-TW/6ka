@@ -2,416 +2,373 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cash Diff</title>
   <style>
     :root{
-      --bg:#0b0c0f;
-      --panel:#11131a;
-      --panel2:#0f1117;
-      --border:#242736;
-      --text:#e9ebf2;
-      --muted:#a6abbd;
-      --muted2:#7b8094;
-      --good:#8ce99a;
-      --bad:#ff8787;
-      --shadow: 0 10px 25px rgba(0,0,0,.35);
-      --radius: 18px;
+      --bg:#0f1115;
+      --panel:#151821;
+      --panel2:#10131a;
+      --text:#e7e7e7;
+      --muted:#a9a9a9;
+      --line:#262b36;
+      --btn:#232836;
+      --btn2:#1a1f2b;
+      --focus:#7a7a7a;
     }
-    *{ box-sizing:border-box; }
+    *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
-      background: radial-gradient(1200px 700px at 20% -10%, rgba(255,255,255,.06), transparent 55%),
-                  radial-gradient(900px 500px at 90% 0%, rgba(255,255,255,.05), transparent 60%),
-                  var(--bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background:linear-gradient(180deg, var(--bg), #0b0d11);
       color:var(--text);
-      padding: 18px 14px 22px;
     }
     .wrap{
-      max-width: 860px;
-      margin: 0 auto;
-    }
-    header{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:12px;
-      margin: 4px 0 14px;
-    }
-    .title{
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: .2px;
-      line-height:1.15;
-    }
-    .subtitle{
-      font-size: 13px;
-      color: var(--muted2);
-      margin-top: 6px;
+      max-width:720px;
+      margin:0 auto;
+      padding:14px 12px 18px;
     }
     .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
+      background:rgba(21,24,33,.92);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    .title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .title h1{
+      margin:0;
+      font-size:18px;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .chip{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      color:var(--muted);
+      background:rgba(16,19,26,.8);
+      user-select:none;
     }
 
-    /* table */
     .grid{
-      width:100%;
-      border-collapse: collapse;
+      display:grid;
+      gap:10px;
     }
-    .grid thead th{
-      background: rgba(255,255,255,.03);
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: none;
-      letter-spacing: .2px;
-      padding: 12px 10px;
-      border-bottom: 1px solid var(--border);
+
+    .hdr{
+      display:grid;
+      grid-template-columns: 84px 1fr 38px 1fr;
+      gap:8px;
+      align-items:center;
+      padding:6px 4px 2px;
+      color:var(--muted);
+      font-size:12px;
     }
-    .grid tbody td{
-      padding: 10px;
-      border-bottom: 1px solid rgba(36,39,54,.7);
-      vertical-align: middle;
+    .row{
+      display:grid;
+      grid-template-columns: 84px 1fr 38px 1fr;
+      gap:8px;
+      align-items:center;
     }
     .denom{
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing: .2px;
-      color: var(--text);
-      white-space: nowrap;
+      font-size:18px;
+      font-weight:700;
+      color:#f0f0f0;
+      padding-left:6px;
+    }
+    input{
+      width:100%;
+      font-size:20px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:var(--panel2);
+      color:var(--text);
+      outline:none;
+    }
+    input:focus{
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(122,122,122,.18);
     }
 
-    .in{
-      width: 100%;
-      appearance: none;
-      border: 1px solid rgba(36,39,54,.9);
-      background: rgba(10,12,16,.55);
-      color: var(--text);
-      border-radius: 14px;
-      padding: 12px 12px;
-      font-size: 18px;
-      font-weight: 700;
-      outline: none;
-    }
-    .in:focus{
-      border-color: rgba(233,235,242,.35);
-      box-shadow: 0 0 0 4px rgba(233,235,242,.08);
-    }
-    .diff{
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: .2px;
-      text-align: right;
-      white-space: nowrap;
-    }
-    .muted{
-      color: var(--muted2);
-      font-weight: 700;
-      font-size: 13px;
-      letter-spacing: .2px;
-    }
-
-    .footer{
+    .eqbtn{
+      width:38px;
+      height:46px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, var(--btn), var(--btn2));
+      color:var(--text);
+      font-size:20px;
+      font-weight:800;
+      cursor:pointer;
+      user-select:none;
       display:flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: stretch;
-      padding: 14px;
-      background: rgba(255,255,255,.02);
+      align-items:center;
+      justify-content:center;
+      padding:0;
     }
-    .totals{
-      flex: 1 1 320px;
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-    }
-    .pill{
-      border: 1px solid var(--border);
-      background: rgba(0,0,0,.18);
-      border-radius: 16px;
-      padding: 12px 12px;
-      min-height: 58px;
-      display:flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 6px;
-    }
-    .pill .v{
-      font-size: 20px;
-      font-weight: 900;
-      letter-spacing: .2px;
-    }
+    .eqbtn:active{ transform: translateY(1px); }
 
     .actions{
-      flex: 1 1 220px;
       display:flex;
-      gap: 10px;
-      align-items: stretch;
-      justify-content: flex-end;
+      gap:10px;
+      margin-top:12px;
     }
-    button{
-      width: 100%;
-      border: 1px solid rgba(233,235,242,.18);
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      color: var(--text);
-      border-radius: 16px;
-      padding: 14px 14px;
-      font-size: 16px;
-      font-weight: 900;
-      letter-spacing: .2px;
-      cursor: pointer;
-      transition: transform .06s ease, border-color .12s ease, background .12s ease;
+    .btn{
+      flex:1;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, var(--btn), var(--btn2));
+      color:var(--text);
+      font-size:16px;
+      font-weight:700;
+      padding:12px 12px;
+      border-radius:14px;
+      cursor:pointer;
       user-select:none;
-      -webkit-tap-highlight-color: transparent;
     }
-    button:active{ transform: translateY(1px) scale(.995); }
-    .btn-secondary{
-      border-color: rgba(233,235,242,.12);
-      background: rgba(255,255,255,.03);
-      color: var(--muted);
+    .btn.secondary{
+      flex:0 0 auto;
+      padding:12px 14px;
+      color:var(--muted);
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    textarea{
+      width:100%;
+      margin-top:12px;
+      min-height:210px;
+      resize:vertical;
+      font-size:15px;
+      line-height:1.35;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#0b0e14;
+      color:var(--text);
+      outline:none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      white-space:pre;
     }
 
-    .toast{
-      position: fixed;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
-      background: rgba(15,17,23,.92);
-      border: 1px solid rgba(233,235,242,.16);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 14px;
-      font-size: 14px;
-      font-weight: 800;
-      box-shadow: var(--shadow);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .18s ease, transform .18s ease;
-    }
-    .toast.show{
-      opacity: 1;
-      transform: translateX(-50%) translateY(-4px);
+    .small{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
-    /* mobile */
-    @media (max-width: 520px){
-      .title{ font-size: 20px; }
-      .grid thead th{ font-size: 12px; padding: 10px 8px; }
-      .grid tbody td{ padding: 9px 8px; }
-      .denom{ font-size: 15px; }
-      .in{ font-size: 18px; padding: 12px 10px; }
-      .diff{ font-size: 18px; }
-      .totals{ grid-template-columns: 1fr; }
-      .actions{ width: 100%; }
-      button{ font-size: 16px; padding: 14px; }
+    @media (max-width:420px){
+      .denom{ font-size:17px; }
+      input{ font-size:19px; padding:11px 11px; }
+      textarea{ font-size:14px; }
+      .hdr{ grid-template-columns: 74px 1fr 34px 1fr; }
+      .row{ grid-template-columns: 74px 1fr 34px 1fr; }
+      .eqbtn{ width:34px; height:44px; border-radius:12px; }
     }
   </style>
 </head>
-
 <body>
   <div class="wrap">
-    <header>
-      <div>
-        <div class="title">金額差異計算</div>
-        <div class="subtitle">A：系統顯示　B：找零箱實際　差值 = B − A</div>
-      </div>
-    </header>
-
     <div class="card">
-      <table class="grid" aria-label="cash table">
-        <thead>
-          <tr>
-            <th style="width: 22%;">面額</th>
-            <th style="width: 26%;">A 數量</th>
-            <th style="width: 26%;">B 數量</th>
-            <th style="width: 26%; text-align:right;">差值金額</th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
+      <div class="title">
+        <h1>金額差異（B − A）</h1>
+        <div class="chip" id="status">Ready</div>
+      </div>
 
-      <div class="footer">
-        <div class="totals">
-          <div class="pill">
-            <div class="muted">A 總金額</div>
-            <div class="v" id="totalA">$0</div>
-          </div>
-          <div class="pill">
-            <div class="muted">B 總金額</div>
-            <div class="v" id="totalB">$0</div>
-          </div>
-          <div class="pill">
-            <div class="muted">總差值（B − A）</div>
-            <div class="v" id="totalDiff">$0</div>
-          </div>
-        </div>
+      <div class="hdr">
+        <div></div>
+        <div style="padding-left:4px;">A</div>
+        <div style="text-align:center;">＝</div>
+        <div style="padding-left:4px;">B</div>
+      </div>
 
-        <div class="actions">
-          <button id="copyBtn">複製結果</button>
-          <button class="btn-secondary" id="clearBtn" title="清空所有欄位">清空</button>
-        </div>
+      <div class="grid" id="rows"></div>
+
+      <div class="actions">
+        <button class="btn" id="copyBtn">複製結果</button>
+        <button class="btn secondary" id="resetBtn">清空</button>
+      </div>
+
+      <textarea id="out" readonly spellcheck="false"></textarea>
+
+      <div class="small">
+        <span>輸出已改成 LINE 友善短行（避免被折行）</span>
+        <span>按「＝」可把 A 直接帶到 B</span>
       </div>
     </div>
   </div>
 
-  <div class="toast" id="toast">已複製</div>
+<script>
+(() => {
+  const denoms = [500, 100, 50, 10, 5, 1];
+  const rowsEl = document.getElementById('rows');
+  const outEl = document.getElementById('out');
+  const statusEl = document.getElementById('status');
+  const copyBtn = document.getElementById('copyBtn');
+  const resetBtn = document.getElementById('resetBtn');
 
-  <script>
-    (function(){
-      const denoms = [500, 100, 50, 10, 5, 1];
-      const rowsEl = document.getElementById('rows');
+  const fmtMoney = (n) => {
+    const sign = n < 0 ? "-" : "";
+    const abs = Math.abs(n);
+    return sign + "$" + abs.toLocaleString("en-US");
+  };
 
-      const fmt = (n) => {
-        const sign = n < 0 ? "-" : "";
-        n = Math.abs(n);
-        return sign + "$" + n.toLocaleString("en-US");
-      };
+  // LINE 友善：每行盡量短
+  // 例：$500 36=36 d$0
+  //     $50  25=22 d-$150
+  // Totals:
+  // A $22,037
+  // B $21,877
+  // d -$160
+  const fmtLine = (denom, aQty, bQty, diffMoney) => {
+    const dLabel = (diffMoney === 0) ? "d$0" : ("d" + fmtMoney(diffMoney));
+    // 這裡用「$500」+ 空格 +「A=B」+ 空格 +「d...」
+    // 不放逗號與長字串，避免 LINE 自動折行
+    return `$${denom} ${aQty}=${bQty} ${dLabel}`;
+  };
 
-      const clampInt = (v) => {
-        // 空字串當 0；其餘取整數；負數允許（方便你用來校正），但通常不需要
-        if (v === "" || v == null) return 0;
-        const x = Number(v);
-        if (!Number.isFinite(x)) return 0;
-        return Math.trunc(x);
-      };
+  const state = {};
+  denoms.forEach(d => state[d] = { a: "", b: "" });
 
-      const makeRow = (d) => {
-        const tr = document.createElement('tr');
+  function buildRows(){
+    rowsEl.innerHTML = "";
+    denoms.forEach(denom => {
+      const row = document.createElement('div');
+      row.className = "row";
 
-        const tdDen = document.createElement('td');
-        tdDen.innerHTML = `<div class="denom">$${d}</div>`;
-        tr.appendChild(tdDen);
+      const denomEl = document.createElement('div');
+      denomEl.className = "denom";
+      denomEl.textContent = `$${denom}`;
 
-        const tdA = document.createElement('td');
-        tdA.innerHTML = `<input class="in" inputmode="numeric" pattern="-?[0-9]*" id="a_${d}" placeholder="0" />`;
-        tr.appendChild(tdA);
-
-        const tdB = document.createElement('td');
-        tdB.innerHTML = `<input class="in" inputmode="numeric" pattern="-?[0-9]*" id="b_${d}" placeholder="0" />`;
-        tr.appendChild(tdB);
-
-        const tdDiff = document.createElement('td');
-        tdDiff.style.textAlign = "right";
-        tdDiff.innerHTML = `<div class="diff" id="diff_${d}">$0</div>`;
-        tr.appendChild(tdDiff);
-
-        return tr;
-      };
-
-      denoms.forEach(d => rowsEl.appendChild(makeRow(d)));
-
-      const totalAEl = document.getElementById('totalA');
-      const totalBEl = document.getElementById('totalB');
-      const totalDiffEl = document.getElementById('totalDiff');
-
-      const getQty = (prefix, d) => clampInt(document.getElementById(prefix + "_" + d).value.trim());
-
-      const compute = () => {
-        let totalA = 0, totalB = 0, totalDiff = 0;
-
-        for (const d of denoms){
-          const a = getQty("a", d);
-          const b = getQty("b", d);
-          const amountA = a * d;
-          const amountB = b * d;
-          const diff = amountB - amountA;
-
-          totalA += amountA;
-          totalB += amountB;
-          totalDiff += diff;
-
-          const diffEl = document.getElementById("diff_" + d);
-          diffEl.textContent = fmt(diff);
-
-          // 顏色提示：正差綠、負差紅、0 灰（不額外提示文字，只有色彩）
-          diffEl.style.color = diff > 0 ? "var(--good)" : (diff < 0 ? "var(--bad)" : "var(--text)");
-          diffEl.style.opacity = diff === 0 ? 0.85 : 1;
-        }
-
-        totalAEl.textContent = fmt(totalA);
-        totalBEl.textContent = fmt(totalB);
-        totalDiffEl.textContent = fmt(totalDiff);
-        totalDiffEl.style.color = totalDiff > 0 ? "var(--good)" : (totalDiff < 0 ? "var(--bad)" : "var(--text)");
-        totalDiffEl.style.opacity = totalDiff === 0 ? 0.85 : 1;
-      };
-
-      // 即時更新
-      denoms.forEach(d => {
-        ["a_", "b_"].forEach(p => {
-          const el = document.getElementById(p + d);
-          el.addEventListener('input', compute);
-          el.addEventListener('blur', () => {
-            // 把非數字清掉（避免有人打進奇怪東西）
-            const v = el.value.trim();
-            if (v === "") return;
-            el.value = String(clampInt(v));
-            compute();
-          });
-        });
+      const aIn = document.createElement('input');
+      aIn.inputMode = "numeric";
+      aIn.placeholder = "A";
+      aIn.value = state[denom].a;
+      aIn.addEventListener('input', () => {
+        state[denom].a = sanitize(aIn.value);
+        if (aIn.value !== state[denom].a) aIn.value = state[denom].a;
+        update();
       });
 
-      const toast = (msg) => {
-        const t = document.getElementById("toast");
-        t.textContent = msg;
-        t.classList.add("show");
-        clearTimeout(window.__toastTimer);
-        window.__toastTimer = setTimeout(() => t.classList.remove("show"), 1200);
-      };
-
-      const buildCopyText = () => {
-        const lines = [];
-        lines.push("金額差異（B − A）");
-        for (const d of denoms){
-          const a = getQty("a", d);
-          const b = getQty("b", d);
-          const diff = (b - a) * d;
-          lines.push(`$${d}: A=${a}, B=${b}, Diff=${fmt(diff)}`);
-        }
-        const totalA = denoms.reduce((s,d)=> s + getQty("a", d)*d, 0);
-        const totalB = denoms.reduce((s,d)=> s + getQty("b", d)*d, 0);
-        const totalDiff = totalB - totalA;
-        lines.push(`A Total: ${fmt(totalA)}`);
-        lines.push(`B Total: ${fmt(totalB)}`);
-        lines.push(`Diff Total: ${fmt(totalDiff)}`);
-        return lines.join("\n");
-      };
-
-      document.getElementById("copyBtn").addEventListener("click", async () => {
-        const text = buildCopyText();
-        try{
-          await navigator.clipboard.writeText(text);
-          toast("已複製結果");
-        }catch(e){
-          // fallback
-          const ta = document.createElement("textarea");
-          ta.value = text;
-          ta.style.position = "fixed";
-          ta.style.left = "-9999px";
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand("copy");
-          document.body.removeChild(ta);
-          toast("已複製結果");
-        }
+      const eq = document.createElement('button');
+      eq.className = "eqbtn";
+      eq.type = "button";
+      eq.textContent = "=";
+      eq.title = "把 A 複製到 B";
+      eq.addEventListener('click', () => {
+        state[denom].b = state[denom].a || "";
+        bIn.value = state[denom].b;
+        bump("A→B");
+        update();
       });
 
-      document.getElementById("clearBtn").addEventListener("click", () => {
-        denoms.forEach(d => {
-          document.getElementById("a_" + d).value = "";
-          document.getElementById("b_" + d).value = "";
-        });
-        compute();
-        toast("已清空");
+      const bIn = document.createElement('input');
+      bIn.inputMode = "numeric";
+      bIn.placeholder = "B";
+      bIn.value = state[denom].b;
+      bIn.addEventListener('input', () => {
+        state[denom].b = sanitize(bIn.value);
+        if (bIn.value !== state[denom].b) bIn.value = state[denom].b;
+        update();
       });
 
-      // init
-      compute();
-    })();
-  </script>
+      row.appendChild(denomEl);
+      row.appendChild(aIn);
+      row.appendChild(eq);
+      row.appendChild(bIn);
+
+      rowsEl.appendChild(row);
+    });
+  }
+
+  function sanitize(v){
+    // 允許空字串；其他只留數字
+    const s = (v ?? "").toString().replace(/[^\d]/g, "");
+    // 去掉前導 0（但保留單個 0）
+    if (s.length > 1) return s.replace(/^0+/, "") || "0";
+    return s;
+  }
+
+  function getQty(denom, which){
+    const v = state[denom][which];
+    if (v === "" || v == null) return 0;
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function update(){
+    let aTotal = 0;
+    let bTotal = 0;
+
+    const lines = [];
+    lines.push("金額差異（B − A）");
+
+    denoms.forEach(denom => {
+      const aQty = getQty(denom, "a");
+      const bQty = getQty(denom, "b");
+      const aMoney = aQty * denom;
+      const bMoney = bQty * denom;
+      const dMoney = bMoney - aMoney;
+
+      aTotal += aMoney;
+      bTotal += bMoney;
+
+      lines.push(fmtLine(denom, aQty, bQty, dMoney));
+    });
+
+    const dTotal = bTotal - aTotal;
+    lines.push("");
+    lines.push(`A ${fmtMoney(aTotal)}`);
+    lines.push(`B ${fmtMoney(bTotal)}`);
+    lines.push(`d ${fmtMoney(dTotal)}`);
+
+    outEl.value = lines.join("\n");
+  }
+
+  function bump(msg){
+    statusEl.textContent = msg;
+    clearTimeout(bump._t);
+    bump._t = setTimeout(() => statusEl.textContent = "Ready", 900);
+  }
+
+  async function copyOutput(){
+    const text = outEl.value || "";
+    try{
+      await navigator.clipboard.writeText(text);
+      bump("Copied");
+    }catch(e){
+      // fallback
+      outEl.focus();
+      outEl.select();
+      document.execCommand("copy");
+      bump("Copied");
+    }
+  }
+
+  function resetAll(){
+    denoms.forEach(d => { state[d].a = ""; state[d].b = ""; });
+    buildRows();
+    update();
+    bump("Cleared");
+  }
+
+  copyBtn.addEventListener('click', copyOutput);
+  resetBtn.addEventListener('click', resetAll);
+
+  buildRows();
+  update();
+})();
+</script>
 </body>
 </html>
