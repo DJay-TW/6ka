@@ -231,10 +231,12 @@
   // B $21,877
   // d -$160
   const fmtLine = (denom, aQty, bQty, diffMoney) => {
-    const dLabel = (diffMoney === 0) ? "d$0" : ("d" + fmtMoney(diffMoney));
-    // 這裡用「$500」+ 空格 +「A=B」+ 空格 +「d...」
-    // 不放逗號與長字串，避免 LINE 自動折行
-    return `$${denom} ${aQty}=${bQty} ${dLabel}`;
+  if (diffMoney === 0) {
+    return `$${denom} ${aQty}=${bQty}`;
+  }
+  return `$${denom} ${aQty}=${bQty} d${fmtMoney(diffMoney)}`;
+};
+
   };
 
   const DEFAULTS = {
