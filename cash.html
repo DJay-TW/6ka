@@ -223,35 +223,24 @@
     return sign + "$" + abs.toLocaleString("en-US");
   };
 
-  // LINE 友善：每行盡量短
-  // 例：$500 36=36 d$0
-  //     $50  25=22 d-$150
-  // Totals:
-  // A $22,037
-  // B $21,877
-  // d -$160
+  // diffMoney=0 時，不顯示 d$0（但仍顯示該面額行）
   const fmtLine = (denom, aQty, bQty, diffMoney) => {
-  if (diffMoney === 0) {
-    return `$${denom} ${aQty}=${bQty}`;
-  }
-  return `$${denom} ${aQty}=${bQty} d${fmtMoney(diffMoney)}`;
-};
-
+    if (diffMoney === 0) return `$${denom} ${aQty}=${bQty}`;
+    return `$${denom} ${aQty}=${bQty} d${fmtMoney(diffMoney)}`;
   };
 
+  // 5元 / 1元 預設值（仍可被修改）
   const DEFAULTS = {
-  5:  { a: "10", b: "10" }, // 自己改你要的數字
-  1:  { a: "17", b: "17" }
-};
+    5: { a: "10", b: "10" },  // 你要的預設值
+    1: { a: "17", b: "17" }
+  };
 
-const state = {};
-denoms.forEach(d => {
-  state[d] = DEFAULTS[d]
-    ? { ...DEFAULTS[d] }
-    : { a: "", b: "" };
-});
+  const state = {};
+  denoms.forEach(d => {
+    state[d] = DEFAULTS[d] ? { ...DEFAULTS[d] } : { a: "", b: "" };
+  });
 
-  function buildRows(){
+  function buildRows() {
     rowsEl.innerHTML = "";
     denoms.forEach(denom => {
       const row = document.createElement('div');
@@ -271,6 +260,16 @@ denoms.forEach(d => {
         update();
       });
 
+      const bIn = document.createElement('input');
+      bIn.inputMode = "numeric";
+      bIn.placeholder = "B";
+      bIn.value = state[denom].b;
+      bIn.addEventListener('input', () => {
+        state[denom].b = sanitize(bIn.value);
+        if (bIn.value !== state[denom].b) bIn.value = state[denom].b;
+        update();
+      });
+
       const eq = document.createElement('button');
       eq.className = "eqbtn";
       eq.type = "button";
@@ -283,16 +282,6 @@ denoms.forEach(d => {
         update();
       });
 
-      const bIn = document.createElement('input');
-      bIn.inputMode = "numeric";
-      bIn.placeholder = "B";
-      bIn.value = state[denom].b;
-      bIn.addEventListener('input', () => {
-        state[denom].b = sanitize(bIn.value);
-        if (bIn.value !== state[denom].b) bIn.value = state[denom].b;
-        update();
-      });
-
       row.appendChild(denomEl);
       row.appendChild(aIn);
       row.appendChild(eq);
@@ -302,22 +291,20 @@ denoms.forEach(d => {
     });
   }
 
-  function sanitize(v){
-    // 允許空字串；其他只留數字
+  function sanitize(v) {
     const s = (v ?? "").toString().replace(/[^\d]/g, "");
-    // 去掉前導 0（但保留單個 0）
     if (s.length > 1) return s.replace(/^0+/, "") || "0";
     return s;
   }
 
-  function getQty(denom, which){
+  function getQty(denom, which) {
     const v = state[denom][which];
     if (v === "" || v == null) return 0;
     const n = parseInt(v, 10);
     return Number.isFinite(n) ? n : 0;
   }
 
-  function update(){
+  function update() {
     let aTotal = 0;
     let bTotal = 0;
 
@@ -346,19 +333,18 @@ denoms.forEach(d => {
     outEl.value = lines.join("\n");
   }
 
-  function bump(msg){
+  function bump(msg) {
     statusEl.textContent = msg;
     clearTimeout(bump._t);
     bump._t = setTimeout(() => statusEl.textContent = "Ready", 900);
   }
 
-  async function copyOutput(){
+  async function copyOutput() {
     const text = outEl.value || "";
-    try{
+    try {
       await navigator.clipboard.writeText(text);
       bump("Copied");
-    }catch(e){
-      // fallback
+    } catch (e) {
       outEl.focus();
       outEl.select();
       document.execCommand("copy");
@@ -366,8 +352,11 @@ denoms.forEach(d => {
     }
   }
 
-  function resetAll(){
-    denoms.forEach(d => { state[d].a = ""; state[d].b = ""; });
+  function resetAll() {
+    denoms.forEach(d => {
+      if (DEFAULTS[d]) state[d] = { ...DEFAULTS[d] };
+      else state[d] = { a: "", b: "" };
+    });
     buildRows();
     update();
     bump("Cleared");
@@ -380,5 +369,6 @@ denoms.forEach(d => {
   update();
 })();
 </script>
+
 </body>
 </html>
