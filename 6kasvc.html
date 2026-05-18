@@ -12,9 +12,8 @@
       --accent-glow: rgba(216, 183, 109, 0.2);
       --text: #f5f7fb;
       --muted: #525a6c;
-      /* 調整未點亮柱子顏色，使其可見 */
-      --line: rgba(255, 255, 255, 0.12); /* 提高可見度 */
-      --bar-unlit: #222530; /* 深灰色未點亮柱子 */
+      --line: rgba(255, 255, 255, 0.12);
+      --bar-unlit: #222530;
     }
 
     * {
@@ -43,7 +42,6 @@
       box-shadow: 0 40px 90px rgba(0,0,0,0.7);
     }
 
-    /* 狀態列 */
     .header {
       display: flex;
       justify-content: space-between;
@@ -78,10 +76,16 @@
       background: var(--muted);
     }
 
-    .status.sync .dot { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-    .status.error .dot { background: #ff5a66; box-shadow: 0 0 8px #ff5a66; }
+    .status.sync .dot {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
 
-    /* 數字顯示 */
+    .status.error .dot {
+      background: #ff5a66;
+      box-shadow: 0 0 8px #ff5a66;
+    }
+
     .readout {
       text-align: center;
       margin-bottom: 28px;
@@ -101,7 +105,6 @@
       font-weight: 500;
     }
 
-    /* 21檔高密度滑動區域 */
     .slider-container {
       position: relative;
       background: rgba(255, 255, 255, 0.01);
@@ -110,10 +113,10 @@
       padding: 24px 12px;
       height: 140px;
       display: grid;
-      grid-template-columns: repeat(21, 1fr); /* 細分 21 檔 */
+      grid-template-columns: repeat(21, 1fr);
       gap: 4px;
       align-items: end;
-      touch-action: none; /* 鎖定手機瀏覽器預設滾動 */
+      touch-action: none;
       cursor: pointer;
     }
 
@@ -121,18 +124,16 @@
       width: 100%;
       min-height: 5px;
       border-radius: 99px;
-      background: var(--bar-unlit); /* 預設使用深灰色 */
-      pointer-events: none; /* 讓事件由父層統一計算 */
+      background: var(--bar-unlit);
+      pointer-events: none;
       transition: background 0.1s ease, box-shadow 0.1s ease;
     }
 
-    /* 點亮狀態：只點亮當前檔位，不顯示進度 */
     .bar.active {
       background: linear-gradient(180deg, #f3dfae, var(--accent));
       box-shadow: 0 0 12px var(--accent-glow);
     }
 
-    /* 下方快切鍵 */
     .quick-actions {
       display: flex;
       gap: 12px;
@@ -160,7 +161,9 @@
       transform: scale(0.96);
     }
 
-    .btn-mute { color: #ffbcbc; }
+    .btn-mute {
+      color: #ffbcbc;
+    }
   </style>
 </head>
 <body>
@@ -184,6 +187,7 @@
       <button type="button" class="btn btn-mute" onclick="triggerVolume(0)">MUTE</button>
       <button type="button" class="btn" onclick="triggerVolume(10)">NORMAL</button>
       <button type="button" class="btn" onclick="triggerVolume(20)">MAX</button>
+      <button type="button" class="btn" onclick="testSound()">TEST</button>
     </footer>
   </main>
 
@@ -191,7 +195,6 @@
     const API_URL = "https://6kas.jay-fbf.workers.dev/push";
     const TOKEN = "558811566";
 
-    // 自動生成 0, 5, 10, 15 ... 100 % 的 21 檔對照表
     const VOLUME_MAP = {};
     for (let i = 0; i <= 20; i++) {
       VOLUME_MAP[i] = i * 5;
@@ -203,51 +206,49 @@
     const currentLevelEl = document.getElementById("currentLevel");
 
     let isDragging = false;
-    let currentLevel = 10; // 預設 50% (即第 10 檔)
+    let currentLevel = 10;
     let isSending = false;
 
-    // 1. 動態建立 21 根音量柱
     function initBars() {
       container.innerHTML = "";
+
       for (let i = 0; i <= 20; i++) {
         const pct = VOLUME_MAP[i];
         const bar = document.createElement("div");
         bar.className = "bar";
         bar.dataset.level = i;
-        bar.style.height = `${Math.max(6, pct)}%`; // 確保最低音量也有微小視覺根基
+        bar.style.height = `${Math.max(6, pct)}%`;
         container.appendChild(bar);
       }
+
       updateUI(currentLevel);
     }
 
-    // 2. 即時刷新前端發光與數字狀態 (絲滑關鍵)
     function updateUI(level) {
       currentLevel = level;
       currentLevelEl.textContent = VOLUME_MAP[level];
-      
+
       const bars = container.querySelectorAll(".bar");
       bars.forEach(bar => {
         const l = Number(bar.dataset.level);
-        // 優化邏輯：獨立檔位指示。只有當前檔位點亮，其餘熄滅。
-        // 當 level === 0 (Mute) 時，無任何檔位亮起。
         bar.classList.toggle("active", l === level && level > 0);
       });
     }
 
-    // 3. 計算觸控/滑動落點
     function handlePointer(e) {
       const rect = container.getBoundingClientRect();
       const offsetX = e.clientX - rect.left;
+
       let pct = offsetX / rect.width;
-      pct = Math.max(0, Math.min(1, pct)); // 極限邊界控制
-      
-      const level = Math.round(pct * 20); // 映射到 0~20 檔
+      pct = Math.max(0, Math.min(1, pct));
+
+      const level = Math.round(pct * 20);
+
       if (level !== currentLevel) {
         updateUI(level);
       }
     }
 
-    // 4. Pointer 監聽 (全自動相容手機觸控與滑鼠)
     container.addEventListener("pointerdown", (e) => {
       isDragging = true;
       container.setPointerCapture(e.pointerId);
@@ -261,18 +262,17 @@
 
     container.addEventListener("pointerup", (e) => {
       if (!isDragging) return;
+
       isDragging = false;
       container.releasePointerCapture(e.pointerId);
-      sendVolume(currentLevel); // 放開手指的瞬間，才噴發 API
+      sendVolume(currentLevel);
     });
 
-    // 5. 快切按鈕直接觸發 (Mute=0, Normal=10, Max=20)
     function triggerVolume(level) {
       updateUI(level);
       sendVolume(level);
     }
 
-    // 6. API 發送
     async function sendVolume(level) {
       if (isSending) return;
       isSending = true;
@@ -292,19 +292,56 @@
         });
 
         const data = await response.json();
-        if (!response.ok || data.success === false) throw new Error();
+
+        if (!response.ok || data.success === false) {
+          throw new Error();
+        }
 
         setStatus("READY", "sync");
-        // 移除額外的 setTimeout，使狀態反饋更直接
+
       } catch (err) {
         setStatus("ERROR", "error");
+
       } finally {
         isSending = false;
       }
     }
 
+    async function testSound() {
+      setStatus("TEST", "sync");
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: TOKEN,
+            type: "new_order",
+            message: "001",
+            device: "volume_panel"
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || data.success === false) {
+          throw new Error();
+        }
+
+        setStatus("READY", "sync");
+
+      } catch (err) {
+        setStatus("ERROR", "error");
+      }
+    }
+
     function setStatus(text, mode = "idle") {
-      statusEl.className = "status " + (mode === "sync" ? "sync" : mode === "error" ? "error" : "");
+      statusEl.className = "status " + (
+        mode === "sync" ? "sync" :
+        mode === "error" ? "error" :
+        ""
+      );
+
       statusText.textContent = text;
     }
 
