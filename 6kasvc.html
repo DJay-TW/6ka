@@ -6,16 +6,18 @@
   <title>6KAS Volume Control</title>
   <style>
     :root {
-      --bg: #08090d;
-      --panel: rgba(22, 24, 32, 0.78);
-      --panel-strong: rgba(31, 34, 45, 0.92);
-      --text: #f4f5f7;
-      --muted: #9ca3af;
-      --line: rgba(255, 255, 255, 0.08);
-      --accent: #d6b46a;
-      --accent-soft: rgba(214, 180, 106, 0.16);
-      --danger: #ef4444;
-      --shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+      --bg: #07080b;
+      --panel: rgba(17, 19, 26, 0.84);
+      --panel-2: rgba(255, 255, 255, 0.045);
+      --line: rgba(255, 255, 255, 0.09);
+      --line-strong: rgba(255, 255, 255, 0.16);
+      --text: #f5f7fb;
+      --muted: #9aa3b2;
+      --soft: #687083;
+      --accent: #d8b76d;
+      --accent-2: #f1d99a;
+      --danger: #ff5a66;
+      --shadow: 0 30px 90px rgba(0, 0, 0, 0.58);
     }
 
     * {
@@ -28,195 +30,339 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at 20% 10%, rgba(214, 180, 106, 0.13), transparent 34%),
-        radial-gradient(circle at 80% 85%, rgba(94, 92, 230, 0.12), transparent 32%),
-        var(--bg);
+        radial-gradient(circle at 18% 12%, rgba(216, 183, 109, 0.15), transparent 30%),
+        radial-gradient(circle at 82% 76%, rgba(94, 92, 230, 0.12), transparent 32%),
+        linear-gradient(145deg, #050609, #0a0c12 52%, #050609);
       display: grid;
       place-items: center;
-      padding: 24px;
+      padding: 22px;
     }
 
-    .shell {
-      width: min(440px, 100%);
+    .app {
+      width: min(520px, 100%);
     }
 
     .card {
-      background: var(--panel);
+      position: relative;
+      overflow: hidden;
+      border-radius: 34px;
       border: 1px solid var(--line);
-      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(20, 23, 31, 0.92), rgba(12, 14, 20, 0.92));
       box-shadow: var(--shadow);
       backdrop-filter: blur(18px);
-      overflow: hidden;
     }
 
-    .header {
-      padding: 26px 24px 18px;
-      border-bottom: 1px solid var(--line);
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(255,255,255,0.07), transparent 36%);
+    }
+
+    .top {
+      position: relative;
+      padding: 30px 30px 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
     }
 
     .eyebrow {
-      font-size: 12px;
-      letter-spacing: 0.14em;
       color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
 
     h1 {
       margin: 0;
-      font-size: 26px;
-      font-weight: 650;
-      letter-spacing: 0.02em;
+      font-size: 34px;
+      line-height: 1.08;
+      letter-spacing: 0.01em;
+      font-weight: 720;
     }
 
-    .subtitle {
-      margin-top: 8px;
-      font-size: 14px;
+    .hint {
+      margin-top: 12px;
       color: var(--muted);
-      line-height: 1.6;
+      font-size: 14px;
+      line-height: 1.65;
     }
 
     .status {
-      margin-top: 18px;
-      min-height: 34px;
-      padding: 8px 12px;
-      border-radius: 999px;
+      flex: 0 0 auto;
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
-      color: var(--muted);
-      background: rgba(255, 255, 255, 0.045);
+      min-width: 116px;
+      max-width: 180px;
+      padding: 10px 12px;
       border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
     }
 
     .dot {
       width: 7px;
       height: 7px;
-      border-radius: 50%;
-      background: var(--muted);
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: var(--soft);
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.03);
     }
 
     .status.ok .dot {
       background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(216,183,109,0.12);
     }
 
     .status.error .dot {
       background: var(--danger);
+      box-shadow: 0 0 0 4px rgba(255,90,102,0.12);
     }
 
-    .body {
-      padding: 22px;
+    .visual {
+      position: relative;
+      padding: 16px 30px 8px;
     }
 
-    .grid {
+    .bars {
+      height: 230px;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      grid-template-columns: repeat(11, 1fr);
+      gap: 9px;
+      align-items: end;
+      padding: 18px 14px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02)),
+        rgba(255, 255, 255, 0.025);
     }
 
-    button {
+    .barButton {
       appearance: none;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      min-height: 66px;
-      background: rgba(255, 255, 255, 0.045);
-      color: var(--text);
-      font-size: 22px;
-      font-weight: 620;
-      letter-spacing: 0.02em;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      height: 100%;
       cursor: pointer;
-      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 9px;
       -webkit-tap-highlight-color: transparent;
     }
 
-    button span {
-      display: block;
-      margin-top: 4px;
-      font-size: 11px;
-      font-weight: 500;
+    .bar {
+      width: 100%;
+      min-height: 8px;
+      border-radius: 999px 999px 7px 7px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.08);
+      transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .barButton:hover .bar {
+      background: rgba(255,255,255,0.14);
+      border-color: rgba(216,183,109,0.35);
+    }
+
+    .barButton.active .bar {
+      background: linear-gradient(180deg, var(--accent-2), var(--accent));
+      border-color: rgba(255,255,255,0.22);
+      box-shadow: 0 0 28px rgba(216, 183, 109, 0.22);
+    }
+
+    .barButton:active .bar {
+      transform: scaleY(0.96);
+    }
+
+    .label {
       color: var(--muted);
-      letter-spacing: 0.08em;
+      font-size: 11px;
+      letter-spacing: 0.02em;
+      min-height: 14px;
+      white-space: nowrap;
     }
 
-    button:hover {
-      background: rgba(255, 255, 255, 0.075);
-      border-color: rgba(214, 180, 106, 0.36);
+    .barButton.active .label {
+      color: var(--text);
     }
 
-    button:active {
+    .readout {
+      padding: 22px 30px 10px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: end;
+    }
+
+    .currentLabel {
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .currentValue {
+      font-size: 54px;
+      line-height: 1;
+      font-weight: 760;
+      letter-spacing: -0.04em;
+    }
+
+    .currentValue span {
+      color: var(--soft);
+      font-size: 22px;
+      letter-spacing: 0;
+      margin-left: 3px;
+      font-weight: 600;
+    }
+
+    .quick {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .quick button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--text);
+      background: rgba(255,255,255,0.045);
+      padding: 11px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.14s ease, border-color 0.14s ease, transform 0.14s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .quick button:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--line-strong);
+    }
+
+    .quick button:active {
       transform: scale(0.97);
     }
 
-    button.active {
-      background: var(--accent-soft);
-      border-color: rgba(214, 180, 106, 0.72);
-      color: var(--accent);
-    }
-
-    .mute {
-      color: #fca5a5;
+    .quick .mute {
+      color: #ffb4bb;
     }
 
     .footer {
-      padding: 0 22px 22px;
-      color: var(--muted);
+      padding: 14px 30px 28px;
+      color: var(--soft);
       font-size: 12px;
       line-height: 1.6;
-      text-align: center;
     }
 
-    @media (max-width: 380px) {
-      .grid {
-        gap: 10px;
+    @media (max-width: 520px) {
+      body {
+        padding: 14px;
       }
 
-      button {
-        min-height: 60px;
-        font-size: 20px;
+      .top {
+        padding: 26px 22px 18px;
+        display: block;
+      }
+
+      .status {
+        margin-top: 18px;
+        max-width: 100%;
+      }
+
+      h1 {
+        font-size: 31px;
+      }
+
+      .visual {
+        padding: 14px 18px 6px;
+      }
+
+      .bars {
+        height: 210px;
+        gap: 6px;
+        padding: 16px 10px;
+        border-radius: 24px;
+      }
+
+      .readout {
+        padding: 20px 22px 8px;
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      .currentValue {
+        font-size: 50px;
+      }
+
+      .quick {
+        justify-content: space-between;
+      }
+
+      .quick button {
+        flex: 1;
+      }
+
+      .footer {
+        padding: 14px 22px 26px;
       }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
+  <main class="app">
     <section class="card">
-      <div class="header">
-        <div class="eyebrow">6KAS Audio Node</div>
-        <h1>音量控制</h1>
-        <div class="subtitle">選擇 0–9 檔。0 為靜音，1–9 為固定音量級距。</div>
+      <header class="top">
+        <div>
+          <div class="eyebrow">6KAS Audio Node</div>
+          <h1>Volume Control</h1>
+          <div class="hint">垂直音量檔位控制。0 為靜音，10 為 100%。</div>
+        </div>
+
         <div id="status" class="status">
           <span class="dot"></span>
           <span id="statusText">待命中</span>
         </div>
-      </div>
+      </header>
 
-      <div class="body">
-        <div class="grid" id="buttons"></div>
-      </div>
+      <section class="visual">
+        <div class="bars" id="bars"></div>
+      </section>
 
-      <div class="footer">
+      <section class="readout">
+        <div>
+          <div class="currentLabel">Current Target</div>
+          <div class="currentValue"><span id="currentLevel">—</span><span id="currentUnit">%</span></div>
+        </div>
+
+        <div class="quick">
+          <button type="button" class="mute" onclick="sendVolume(0)">Mute</button>
+          <button type="button" onclick="sendVolume(6)">Normal</button>
+          <button type="button" onclick="sendVolume(10)">Max</button>
+        </div>
+      </section>
+
+      <footer class="footer">
         指令會送到 Cloudflare Worker，Pi 輪詢後執行本地音量調整。
-      </div>
+      </footer>
     </section>
   </main>
 
   <script>
     const API_URL = "https://6kas.jay-fbf.workers.dev/push";
     const TOKEN = "558811566";
-
-    const levels = [
-      { level: 0, label: "靜音", className: "mute" },
-      { level: 1, label: "10%" },
-      { level: 2, label: "18%" },
-      { level: 3, label: "26%" },
-      { level: 4, label: "34%" },
-      { level: 5, label: "42%" },
-      { level: 6, label: "50%" },
-      { level: 7, label: "60%" },
-      { level: 8, label: "75%" },
-      { level: 9, label: "90%" }
-    ];
 
     const VOLUME_MAP = {
       0: 0,
@@ -228,13 +374,15 @@
       6: 50,
       7: 60,
       8: 75,
-      9: 90
+      9: 90,
+      10: 100
     };
 
-    const buttons = document.getElementById("buttons");
+    const bars = document.getElementById("bars");
     const status = document.getElementById("status");
     const statusText = document.getElementById("statusText");
-    let currentLevel = null;
+    const currentLevel = document.getElementById("currentLevel");
+    const currentUnit = document.getElementById("currentUnit");
 
     function setStatus(text, mode = "idle") {
       status.classList.remove("ok", "error");
@@ -243,30 +391,41 @@
       statusText.textContent = text;
     }
 
-    function renderButtons() {
-      buttons.innerHTML = "";
+    function renderBars() {
+      bars.innerHTML = "";
 
-      levels.forEach(item => {
+      Object.keys(VOLUME_MAP).map(Number).forEach(level => {
+        const volume = VOLUME_MAP[level];
         const button = document.createElement("button");
         button.type = "button";
-        button.dataset.level = String(item.level);
-        button.className = item.className || "";
-        button.innerHTML = item.level === 0
-          ? `0<span>${item.label}</span>`
-          : `${item.level}<span>${item.label}</span>`;
-        button.addEventListener("click", () => sendVolume(item.level));
-        buttons.appendChild(button);
+        button.className = "barButton";
+        button.dataset.level = String(level);
+        button.setAttribute("aria-label", `Volume ${volume}%`);
+        button.onclick = () => sendVolume(level);
+
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.height = `${Math.max(6, volume)}%`;
+
+        const label = document.createElement("div");
+        label.className = "label";
+        label.textContent = level === 0 ? "Mute" : `${volume}`;
+
+        button.appendChild(bar);
+        button.appendChild(label);
+        bars.appendChild(button);
       });
     }
 
     function markActive(level) {
-      document.querySelectorAll("button[data-level]").forEach(button => {
+      document.querySelectorAll(".barButton").forEach(button => {
         button.classList.toggle("active", Number(button.dataset.level) === level);
       });
     }
 
     async function sendVolume(level) {
-      setStatus(`送出音量檔位 ${level}...`);
+      const volume = VOLUME_MAP[level];
+      setStatus(`送出 ${volume}%...`);
 
       try {
         const response = await fetch(API_URL, {
@@ -277,7 +436,7 @@
           body: JSON.stringify({
             token: TOKEN,
             type: "volume",
-            message: String(VOLUME_MAP[level])
+            message: String(volume)
           })
         });
 
@@ -287,15 +446,16 @@
           throw new Error(data.error || `HTTP ${response.status}`);
         }
 
-        currentLevel = level;
         markActive(level);
-        setStatus(`已送出：音量檔位 ${level}`, "ok");
+        currentLevel.textContent = String(volume);
+        currentUnit.style.display = "inline";
+        setStatus(`已送出 ${volume}%`, "ok");
       } catch (error) {
         setStatus(`送出失敗：${error.message}`, "error");
       }
     }
 
-    renderButtons();
+    renderBars();
   </script>
 </body>
 </html>
