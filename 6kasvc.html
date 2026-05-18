@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>6KAS Volume Control</title>
+  <style>
+    :root {
+      --bg: #08090d;
+      --panel: rgba(22, 24, 32, 0.78);
+      --panel-strong: rgba(31, 34, 45, 0.92);
+      --text: #f4f5f7;
+      --muted: #9ca3af;
+      --line: rgba(255, 255, 255, 0.08);
+      --accent: #d6b46a;
+      --accent-soft: rgba(214, 180, 106, 0.16);
+      --danger: #ef4444;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(214, 180, 106, 0.13), transparent 34%),
+        radial-gradient(circle at 80% 85%, rgba(94, 92, 230, 0.12), transparent 32%),
+        var(--bg);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .shell {
+      width: min(440px, 100%);
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 26px 24px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 650;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .status {
+      margin-top: 18px;
+      min-height: 34px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid var(--line);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    .status.ok .dot {
+      background: var(--accent);
+    }
+
+    .status.error .dot {
+      background: var(--danger);
+    }
+
+    .body {
+      padding: 22px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      min-height: 66px;
+      background: rgba(255, 255, 255, 0.045);
+      color: var(--text);
+      font-size: 22px;
+      font-weight: 620;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button span {
+      display: block;
+      margin-top: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.075);
+      border-color: rgba(214, 180, 106, 0.36);
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    button.active {
+      background: var(--accent-soft);
+      border-color: rgba(214, 180, 106, 0.72);
+      color: var(--accent);
+    }
+
+    .mute {
+      color: #fca5a5;
+    }
+
+    .footer {
+      padding: 0 22px 22px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    @media (max-width: 380px) {
+      .grid {
+        gap: 10px;
+      }
+
+      button {
+        min-height: 60px;
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="card">
+      <div class="header">
+        <div class="eyebrow">6KAS Audio Node</div>
+        <h1>音量控制</h1>
+        <div class="subtitle">選擇 0–9 檔。0 為靜音，1–9 為固定音量級距。</div>
+        <div id="status" class="status">
+          <span class="dot"></span>
+          <span id="statusText">待命中</span>
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="grid" id="buttons"></div>
+      </div>
+
+      <div class="footer">
+        指令會送到 Cloudflare Worker，Pi 輪詢後執行本地音量調整。
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_URL = "https://6kas.jay-fbf.workers.dev/push";
+    const TOKEN = "558811566";
+
+    const levels = [
+      { level: 0, label: "靜音", className: "mute" },
+      { level: 1, label: "10%" },
+      { level: 2, label: "18%" },
+      { level: 3, label: "26%" },
+      { level: 4, label: "34%" },
+      { level: 5, label: "42%" },
+      { level: 6, label: "50%" },
+      { level: 7, label: "60%" },
+      { level: 8, label: "75%" },
+      { level: 9, label: "90%" }
+    ];
+
+    const VOLUME_MAP = {
+      0: 0,
+      1: 10,
+      2: 18,
+      3: 26,
+      4: 34,
+      5: 42,
+      6: 50,
+      7: 60,
+      8: 75,
+      9: 90
+    };
+
+    const buttons = document.getElementById("buttons");
+    const status = document.getElementById("status");
+    const statusText = document.getElementById("statusText");
+    let currentLevel = null;
+
+    function setStatus(text, mode = "idle") {
+      status.classList.remove("ok", "error");
+      if (mode === "ok") status.classList.add("ok");
+      if (mode === "error") status.classList.add("error");
+      statusText.textContent = text;
+    }
+
+    function renderButtons() {
+      buttons.innerHTML = "";
+
+      levels.forEach(item => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.level = String(item.level);
+        button.className = item.className || "";
+        button.innerHTML = item.level === 0
+          ? `0<span>${item.label}</span>`
+          : `${item.level}<span>${item.label}</span>`;
+        button.addEventListener("click", () => sendVolume(item.level));
+        buttons.appendChild(button);
+      });
+    }
+
+    function markActive(level) {
+      document.querySelectorAll("button[data-level]").forEach(button => {
+        button.classList.toggle("active", Number(button.dataset.level) === level);
+      });
+    }
+
+    async function sendVolume(level) {
+      setStatus(`送出音量檔位 ${level}...`);
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            token: TOKEN,
+            type: "volume",
+            message: String(VOLUME_MAP[level])
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || data.success === false) {
+          throw new Error(data.error || `HTTP ${response.status}`);
+        }
+
+        currentLevel = level;
+        markActive(level);
+        setStatus(`已送出：音量檔位 ${level}`, "ok");
+      } catch (error) {
+        setStatus(`送出失敗：${error.message}`, "error");
+      }
+    }
+
+    renderButtons();
+  </script>
+</body>
+</html>
