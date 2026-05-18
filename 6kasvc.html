@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>6KAS Control</title>
+  <title>6KAS Control Pro</title>
   <style>
     :root {
-      --bg: #08090c;
-      --card: #12141c;
+      --bg: #07080a;
+      --card: #11131a;
       --accent: #d8b76d;
-      --accent-glow: rgba(216, 183, 109, 0.25);
+      --accent-glow: rgba(216, 183, 109, 0.2);
       --text: #f5f7fb;
-      --muted: #687083;
-      --line: rgba(255, 255, 255, 0.08);
+      --muted: #525a6c;
+      --line: rgba(255, 255, 255, 0.06);
     }
 
     * {
@@ -33,45 +33,45 @@
     }
 
     .app {
-      width: min(400px, 100%);
+      width: min(420px, 100%);
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 32px;
-      padding: 24px;
-      box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+      padding: 28px 24px;
+      box-shadow: 0 40px 90px rgba(0,0,0,0.7);
     }
 
-    /* 頂部狀態 */
+    /* 狀態列 */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .node-info {
-      font-size: 12px;
-      letter-spacing: 0.1em;
+      font-size: 11px;
+      letter-spacing: 0.15em;
       color: var(--muted);
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .status {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 12px;
+      font-size: 11px;
+      font-weight: 600;
       color: var(--muted);
-      background: rgba(255,255,255,0.03);
-      padding: 6px 12px;
+      background: rgba(255,255,255,0.02);
+      padding: 5px 12px;
       border-radius: 99px;
       border: 1px solid var(--line);
-      transition: all 0.2s ease;
     }
 
     .dot {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       background: var(--muted);
     }
@@ -79,16 +79,16 @@
     .status.sync .dot { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
     .status.error .dot { background: #ff5a66; box-shadow: 0 0 8px #ff5a66; }
 
-    /* 巨型數字讀數 */
+    /* 數字顯示 */
     .readout {
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 28px;
     }
 
     .value {
-      font-size: 64px;
+      font-size: 72px;
       font-weight: 800;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.04em;
       line-height: 1;
     }
 
@@ -96,86 +96,69 @@
       font-size: 24px;
       color: var(--muted);
       margin-left: 2px;
+      font-weight: 500;
     }
 
-    /* 滑動音量條區域 */
+    /* 21檔高密度滑動區域 */
     .slider-container {
       position: relative;
-      background: rgba(255, 255, 255, 0.02);
+      background: rgba(255, 255, 255, 0.01);
       border: 1px solid var(--line);
       border-radius: 20px;
-      padding: 20px 14px;
-      height: 160px;
+      padding: 24px 12px;
+      height: 140px;
       display: grid;
-      grid-template-columns: repeat(11, 1fr);
-      gap: 6px;
+      grid-template-columns: repeat(21, 1fr); /* 細分 21 檔 */
+      gap: 4px;
       align-items: end;
-      touch-action: none; /* 關鍵：防止手機瀏覽器上下滾動干擾滑動 */
+      touch-action: none; /* 鎖定手機瀏覽器預設滾動 */
       cursor: pointer;
-    }
-
-    .bar-wrapper {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 8px;
-      pointer-events: none; /* 讓事件由父層統一處理 */
     }
 
     .bar {
       width: 100%;
-      min-height: 6px;
+      min-height: 5px;
       border-radius: 99px;
-      background: rgba(255, 255, 255, 0.08);
-      transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+      background: rgba(255, 255, 255, 0.06);
+      pointer-events: none; /* 讓事件由父層統一計算 */
+      transition: background 0.1s ease, box-shadow 0.1s ease;
     }
 
-    .bar-wrapper.active .bar {
-      background: linear-gradient(180deg, #f1d99a, var(--accent));
-      box-shadow: 0 0 16px var(--accent-glow);
+    /* 點亮狀態：低於或等於當前音量者全部點亮，形成進度條效果 */
+    .bar.active {
+      background: linear-gradient(180deg, #f3dfae, var(--accent));
+      box-shadow: 0 0 12px var(--accent-glow);
     }
 
-    .bar-label {
-      font-size: 10px;
-      color: var(--muted);
-      font-weight: 500;
-    }
-
-    .bar-wrapper.active .bar-label {
-      color: var(--text);
-    }
-
-    /* 底部快捷鍵 */
+    /* 下方快切鍵 */
     .quick-actions {
       display: flex;
-      gap: 10px;
-      margin-top: 24px;
+      gap: 12px;
+      margin-top: 32px;
     }
 
     .btn {
       flex: 1;
       appearance: none;
       border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.03);
       color: var(--text);
-      padding: 14px;
+      padding: 15px;
       border-radius: 16px;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
       cursor: pointer;
       transition: background 0.1s, transform 0.1s;
       -webkit-tap-highlight-color: transparent;
     }
 
     .btn:active {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       transform: scale(0.96);
     }
 
-    .btn-mute { color: #ffb4bb; }
+    .btn-mute { color: #ffbcbc; }
   </style>
 </head>
 <body>
@@ -193,13 +176,13 @@
       <div class="value"><span id="currentLevel">50</span><span class="unit">%</span></div>
     </section>
 
-    <!-- 支援拖曳與點擊的音量複合區域 -->
+    <!-- 21 檔動態等化器型滑動條 -->
     <section class="slider-container" id="sliderContainer"></section>
 
     <footer class="quick-actions">
       <button type="button" class="btn btn-mute" onclick="triggerVolume(0)">MUTE</button>
-      <button type="button" class="btn" onclick="triggerVolume(6)">NORMAL</button>
-      <button type="button" class="btn" onclick="triggerVolume(10)">MAX</button>
+      <button type="button" class="btn" onclick="triggerVolume(10)">NORMAL</button>
+      <button type="button" class="btn" onclick="triggerVolume(20)">MAX</button>
     </footer>
   </main>
 
@@ -207,10 +190,11 @@
     const API_URL = "https://6kas.jay-fbf.workers.dev/push";
     const TOKEN = "558811566";
 
-    const VOLUME_MAP = {
-      0: 0, 1: 10, 2: 18, 3: 26, 4: 34, 5: 42,
-      6: 50, 7: 60, 8: 75, 9: 90, 10: 100
-    };
+    // 自動生成 0, 5, 10, 15 ... 100 % 的 21 檔對照表
+    const VOLUME_MAP = {};
+    for (let i = 0; i <= 20; i++) {
+      VOLUME_MAP[i] = i * 5;
+    }
 
     const container = document.getElementById("sliderContainer");
     const statusEl = document.getElementById("status");
@@ -218,58 +202,50 @@
     const currentLevelEl = document.getElementById("currentLevel");
 
     let isDragging = false;
-    let currentLevel = 6; // 預設 50% (級距 6)
+    let currentLevel = 10; // 預設 50% (即第 10 檔)
     let isSending = false;
 
-    // 1. 初始化渲染音量條
+    // 1. 動態建立 21 根音量柱
     function initBars() {
       container.innerHTML = "";
-      Object.keys(VOLUME_MAP).map(Number).forEach(level => {
-        const pct = VOLUME_MAP[level];
-        const wrapper = document.createElement("div");
-        wrapper.className = "bar-wrapper";
-        wrapper.dataset.level = level;
-
+      for (let i = 0; i <= 20; i++) {
+        const pct = VOLUME_MAP[i];
         const bar = document.createElement("div");
         bar.className = "bar";
-        bar.style.height = `${Math.max(6, pct)}%`;
-
-        const label = document.createElement("div");
-        label.className = "bar-label";
-        label.textContent = level === 0 ? "•" : pct;
-
-        wrapper.appendChild(bar);
-        wrapper.appendChild(label);
-        container.appendChild(wrapper);
-      });
+        bar.dataset.level = i;
+        bar.style.height = `${Math.max(6, pct)}%`; // 確保最低音量也有微小視覺根基
+        container.appendChild(bar);
+      }
       updateUI(currentLevel);
     }
 
-    // 2. 更新純前端 UI 狀態（極速響應）
+    // 2. 即時刷新前端發光與數字狀態 (絲滑關鍵)
     function updateUI(level) {
       currentLevel = level;
       currentLevelEl.textContent = VOLUME_MAP[level];
       
-      document.querySelectorAll(".bar-wrapper").forEach(wrapper => {
-        const l = Number(wrapper.dataset.level);
-        wrapper.classList.toggle("active", l <= level && (level !== 0 || l === 0));
+      const bars = container.querySelectorAll(".bar");
+      bars.forEach(bar => {
+        const l = Number(bar.dataset.level);
+        // 如果是 0% (Mute)，全部熄滅；其餘則亮起小於等於當前檔位的柱子
+        bar.classList.toggle("active", l <= level && level > 0);
       });
     }
 
-    // 3. 處理觸控、滑動坐標邏輯
+    // 3. 計算觸控/滑動落點
     function handlePointer(e) {
       const rect = container.getBoundingClientRect();
       const offsetX = e.clientX - rect.left;
       let pct = offsetX / rect.width;
-      pct = Math.max(0, Math.min(1, pct)); // 限制在 0~1 之間
+      pct = Math.max(0, Math.min(1, pct)); // 極限邊界控制
       
-      const level = Math.round(pct * 10);
+      const level = Math.round(pct * 20); // 映射到 0~20 檔
       if (level !== currentLevel) {
         updateUI(level);
       }
     }
 
-    // 4. 綁定滑動事件（Pointer Events 完美相容全平台觸控）
+    // 4. Pointer 監聽 (全自動相容手機觸控與滑鼠)
     container.addEventListener("pointerdown", (e) => {
       isDragging = true;
       container.setPointerCapture(e.pointerId);
@@ -285,16 +261,16 @@
       if (!isDragging) return;
       isDragging = false;
       container.releasePointerCapture(e.pointerId);
-      sendVolume(currentLevel); // 手指離開時才觸發 API 請求
+      sendVolume(currentLevel); // 放開手指的瞬間，才噴發 API，保護後端並防止卡頓
     });
 
-    // 5. 快捷鍵點擊直接觸發
+    // 5. 快切按鈕直接觸發 (Mute=0, Normal=10, Max=20)
     function triggerVolume(level) {
       updateUI(level);
       sendVolume(level);
     }
 
-    // 6. 送出數據至 Cloudflare Worker
+    // 6. API 發送
     async function sendVolume(level) {
       if (isSending) return;
       isSending = true;
@@ -317,10 +293,10 @@
         if (!response.ok || data.success === false) throw new Error();
 
         setStatus("READY", "sync");
-        setTimeout(() => setStatus("READY", "idle"), 1000);
+        setTimeout(() => setStatus("READY", "idle"), 800);
       } catch (err) {
         setStatus("ERROR", "error");
-      } finally {
+      } finaly {
         isSending = false;
       }
     }
