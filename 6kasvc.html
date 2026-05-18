@@ -2,362 +2,205 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>6KAS Volume Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>6KAS Control</title>
   <style>
     :root {
-      --bg: #07080b;
-      --panel: rgba(17, 19, 26, 0.84);
-      --panel-2: rgba(255, 255, 255, 0.045);
-      --line: rgba(255, 255, 255, 0.09);
-      --line-strong: rgba(255, 255, 255, 0.16);
-      --text: #f5f7fb;
-      --muted: #9aa3b2;
-      --soft: #687083;
+      --bg: #08090c;
+      --card: #12141c;
       --accent: #d8b76d;
-      --accent-2: #f1d99a;
-      --danger: #ff5a66;
-      --shadow: 0 30px 90px rgba(0, 0, 0, 0.58);
+      --accent-glow: rgba(216, 183, 109, 0.25);
+      --text: #f5f7fb;
+      --muted: #687083;
+      --line: rgba(255, 255, 255, 0.08);
     }
 
     * {
       box-sizing: border-box;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     body {
       margin: 0;
-      min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      height: 100dvh;
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--text);
-      background:
-        radial-gradient(circle at 18% 12%, rgba(216, 183, 109, 0.15), transparent 30%),
-        radial-gradient(circle at 82% 76%, rgba(94, 92, 230, 0.12), transparent 32%),
-        linear-gradient(145deg, #050609, #0a0c12 52%, #050609);
       display: grid;
       place-items: center;
-      padding: 22px;
+      padding: 16px;
     }
 
     .app {
-      width: min(520px, 100%);
-    }
-
-    .card {
-      position: relative;
-      overflow: hidden;
-      border-radius: 34px;
+      width: min(400px, 100%);
+      background: var(--card);
       border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(20, 23, 31, 0.92), rgba(12, 14, 20, 0.92));
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
+      border-radius: 32px;
+      padding: 24px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6);
     }
 
-    .card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: linear-gradient(135deg, rgba(255,255,255,0.07), transparent 36%);
-    }
-
-    .top {
-      position: relative;
-      padding: 30px 30px 22px;
+    /* 頂部狀態 */
+    .header {
       display: flex;
       justify-content: space-between;
-      gap: 20px;
-      align-items: flex-start;
+      align-items: center;
+      margin-bottom: 24px;
     }
 
-    .eyebrow {
-      color: var(--accent);
+    .node-info {
       font-size: 12px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 34px;
-      line-height: 1.08;
-      letter-spacing: 0.01em;
-      font-weight: 720;
-    }
-
-    .hint {
-      margin-top: 12px;
+      letter-spacing: 0.1em;
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.65;
+      font-weight: 600;
     }
 
     .status {
-      flex: 0 0 auto;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      min-width: 116px;
-      max-width: 180px;
-      padding: 10px 12px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--muted);
+      gap: 6px;
       font-size: 12px;
-      line-height: 1.35;
+      color: var(--muted);
+      background: rgba(255,255,255,0.03);
+      padding: 6px 12px;
+      border-radius: 99px;
+      border: 1px solid var(--line);
+      transition: all 0.2s ease;
     }
 
     .dot {
-      width: 7px;
-      height: 7px;
-      flex: 0 0 auto;
-      border-radius: 999px;
-      background: var(--soft);
-      box-shadow: 0 0 0 4px rgba(255,255,255,0.03);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
     }
 
-    .status.ok .dot {
-      background: var(--accent);
-      box-shadow: 0 0 0 4px rgba(216,183,109,0.12);
+    .status.sync .dot { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .status.error .dot { background: #ff5a66; box-shadow: 0 0 8px #ff5a66; }
+
+    /* 巨型數字讀數 */
+    .readout {
+      text-align: center;
+      margin-bottom: 24px;
     }
 
-    .status.error .dot {
-      background: var(--danger);
-      box-shadow: 0 0 0 4px rgba(255,90,102,0.12);
+    .value {
+      font-size: 64px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
     }
 
-    .visual {
+    .unit {
+      font-size: 24px;
+      color: var(--muted);
+      margin-left: 2px;
+    }
+
+    /* 滑動音量條區域 */
+    .slider-container {
       position: relative;
-      padding: 16px 30px 8px;
-    }
-
-    .bars {
-      height: 230px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px 14px;
+      height: 160px;
       display: grid;
       grid-template-columns: repeat(11, 1fr);
-      gap: 9px;
+      gap: 6px;
       align-items: end;
-      padding: 18px 14px;
-      border: 1px solid var(--line);
-      border-radius: 28px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02)),
-        rgba(255, 255, 255, 0.025);
+      touch-action: none; /* 關鍵：防止手機瀏覽器上下滾動干擾滑動 */
+      cursor: pointer;
     }
 
-    .barButton {
-      appearance: none;
-      border: 0;
-      background: transparent;
-      padding: 0;
+    .bar-wrapper {
       height: 100%;
-      cursor: pointer;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
       align-items: center;
-      gap: 9px;
-      -webkit-tap-highlight-color: transparent;
+      gap: 8px;
+      pointer-events: none; /* 讓事件由父層統一處理 */
     }
 
     .bar {
       width: 100%;
-      min-height: 8px;
-      border-radius: 999px 999px 7px 7px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.08);
-      transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+      min-height: 6px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.08);
+      transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .barButton:hover .bar {
-      background: rgba(255,255,255,0.14);
-      border-color: rgba(216,183,109,0.35);
+    .bar-wrapper.active .bar {
+      background: linear-gradient(180deg, #f1d99a, var(--accent));
+      box-shadow: 0 0 16px var(--accent-glow);
     }
 
-    .barButton.active .bar {
-      background: linear-gradient(180deg, var(--accent-2), var(--accent));
-      border-color: rgba(255,255,255,0.22);
-      box-shadow: 0 0 28px rgba(216, 183, 109, 0.22);
-    }
-
-    .barButton:active .bar {
-      transform: scaleY(0.96);
-    }
-
-    .label {
+    .bar-label {
+      font-size: 10px;
       color: var(--muted);
-      font-size: 11px;
-      letter-spacing: 0.02em;
-      min-height: 14px;
-      white-space: nowrap;
+      font-weight: 500;
     }
 
-    .barButton.active .label {
+    .bar-wrapper.active .bar-label {
       color: var(--text);
     }
 
-    .readout {
-      padding: 22px 30px 10px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 18px;
-      align-items: end;
-    }
-
-    .currentLabel {
-      color: var(--muted);
-      font-size: 13px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .currentValue {
-      font-size: 54px;
-      line-height: 1;
-      font-weight: 760;
-      letter-spacing: -0.04em;
-    }
-
-    .currentValue span {
-      color: var(--soft);
-      font-size: 22px;
-      letter-spacing: 0;
-      margin-left: 3px;
-      font-weight: 600;
-    }
-
-    .quick {
+    /* 底部快捷鍵 */
+    .quick-actions {
       display: flex;
       gap: 10px;
-      align-items: center;
+      margin-top: 24px;
     }
 
-    .quick button {
+    .btn {
+      flex: 1;
       appearance: none;
       border: 1px solid var(--line);
-      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
       color: var(--text);
-      background: rgba(255,255,255,0.045);
-      padding: 11px 14px;
+      padding: 14px;
+      border-radius: 16px;
       font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
       cursor: pointer;
-      transition: background 0.14s ease, border-color 0.14s ease, transform 0.14s ease;
+      transition: background 0.1s, transform 0.1s;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .quick button:hover {
-      background: rgba(255,255,255,0.08);
-      border-color: var(--line-strong);
+    .btn:active {
+      background: rgba(255, 255, 255, 0.1);
+      transform: scale(0.96);
     }
 
-    .quick button:active {
-      transform: scale(0.97);
-    }
-
-    .quick .mute {
-      color: #ffb4bb;
-    }
-
-    .footer {
-      padding: 14px 30px 28px;
-      color: var(--soft);
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    @media (max-width: 520px) {
-      body {
-        padding: 14px;
-      }
-
-      .top {
-        padding: 26px 22px 18px;
-        display: block;
-      }
-
-      .status {
-        margin-top: 18px;
-        max-width: 100%;
-      }
-
-      h1 {
-        font-size: 31px;
-      }
-
-      .visual {
-        padding: 14px 18px 6px;
-      }
-
-      .bars {
-        height: 210px;
-        gap: 6px;
-        padding: 16px 10px;
-        border-radius: 24px;
-      }
-
-      .readout {
-        padding: 20px 22px 8px;
-        grid-template-columns: 1fr;
-        align-items: start;
-      }
-
-      .currentValue {
-        font-size: 50px;
-      }
-
-      .quick {
-        justify-content: space-between;
-      }
-
-      .quick button {
-        flex: 1;
-      }
-
-      .footer {
-        padding: 14px 22px 26px;
-      }
-    }
+    .btn-mute { color: #ffb4bb; }
   </style>
 </head>
 <body>
+
   <main class="app">
-    <section class="card">
-      <header class="top">
-        <div>
-          <div class="eyebrow">6KAS Audio Node</div>
-          <h1>Volume Control</h1>
-          <div class="hint">垂直音量檔位控制。0 為靜音，10 為 100%。</div>
-        </div>
+    <header class="header">
+      <div class="node-info">6KAS AUDIO</div>
+      <div id="status" class="status">
+        <span class="dot"></span>
+        <span id="statusText">READY</span>
+      </div>
+    </header>
 
-        <div id="status" class="status">
-          <span class="dot"></span>
-          <span id="statusText">待命中</span>
-        </div>
-      </header>
-
-      <section class="visual">
-        <div class="bars" id="bars"></div>
-      </section>
-
-      <section class="readout">
-        <div>
-          <div class="currentLabel">Current Target</div>
-          <div class="currentValue"><span id="currentLevel">—</span><span id="currentUnit">%</span></div>
-        </div>
-
-        <div class="quick">
-          <button type="button" class="mute" onclick="sendVolume(0)">Mute</button>
-          <button type="button" onclick="sendVolume(6)">Normal</button>
-          <button type="button" onclick="sendVolume(10)">Max</button>
-        </div>
-      </section>
-
-      <footer class="footer">
-        指令會送到 Cloudflare Worker，Pi 輪詢後執行本地音量調整。
-      </footer>
+    <section class="readout">
+      <div class="value"><span id="currentLevel">50</span><span class="unit">%</span></div>
     </section>
+
+    <!-- 支援拖曳與點擊的音量複合區域 -->
+    <section class="slider-container" id="sliderContainer"></section>
+
+    <footer class="quick-actions">
+      <button type="button" class="btn btn-mute" onclick="triggerVolume(0)">MUTE</button>
+      <button type="button" class="btn" onclick="triggerVolume(6)">NORMAL</button>
+      <button type="button" class="btn" onclick="triggerVolume(10)">MAX</button>
+    </footer>
   </main>
 
   <script>
@@ -365,74 +208,104 @@
     const TOKEN = "558811566";
 
     const VOLUME_MAP = {
-      0: 0,
-      1: 10,
-      2: 18,
-      3: 26,
-      4: 34,
-      5: 42,
-      6: 50,
-      7: 60,
-      8: 75,
-      9: 90,
-      10: 100
+      0: 0, 1: 10, 2: 18, 3: 26, 4: 34, 5: 42,
+      6: 50, 7: 60, 8: 75, 9: 90, 10: 100
     };
 
-    const bars = document.getElementById("bars");
-    const status = document.getElementById("status");
+    const container = document.getElementById("sliderContainer");
+    const statusEl = document.getElementById("status");
     const statusText = document.getElementById("statusText");
-    const currentLevel = document.getElementById("currentLevel");
-    const currentUnit = document.getElementById("currentUnit");
+    const currentLevelEl = document.getElementById("currentLevel");
 
-    function setStatus(text, mode = "idle") {
-      status.classList.remove("ok", "error");
-      if (mode === "ok") status.classList.add("ok");
-      if (mode === "error") status.classList.add("error");
-      statusText.textContent = text;
-    }
+    let isDragging = false;
+    let currentLevel = 6; // 預設 50% (級距 6)
+    let isSending = false;
 
-    function renderBars() {
-      bars.innerHTML = "";
-
+    // 1. 初始化渲染音量條
+    function initBars() {
+      container.innerHTML = "";
       Object.keys(VOLUME_MAP).map(Number).forEach(level => {
-        const volume = VOLUME_MAP[level];
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "barButton";
-        button.dataset.level = String(level);
-        button.setAttribute("aria-label", `Volume ${volume}%`);
-        button.onclick = () => sendVolume(level);
+        const pct = VOLUME_MAP[level];
+        const wrapper = document.createElement("div");
+        wrapper.className = "bar-wrapper";
+        wrapper.dataset.level = level;
 
         const bar = document.createElement("div");
         bar.className = "bar";
-        bar.style.height = `${Math.max(6, volume)}%`;
+        bar.style.height = `${Math.max(6, pct)}%`;
 
         const label = document.createElement("div");
-        label.className = "label";
-        label.textContent = level === 0 ? "Mute" : `${volume}`;
+        label.className = "bar-label";
+        label.textContent = level === 0 ? "•" : pct;
 
-        button.appendChild(bar);
-        button.appendChild(label);
-        bars.appendChild(button);
+        wrapper.appendChild(bar);
+        wrapper.appendChild(label);
+        container.appendChild(wrapper);
+      });
+      updateUI(currentLevel);
+    }
+
+    // 2. 更新純前端 UI 狀態（極速響應）
+    function updateUI(level) {
+      currentLevel = level;
+      currentLevelEl.textContent = VOLUME_MAP[level];
+      
+      document.querySelectorAll(".bar-wrapper").forEach(wrapper => {
+        const l = Number(wrapper.dataset.level);
+        wrapper.classList.toggle("active", l <= level && (level !== 0 || l === 0));
       });
     }
 
-    function markActive(level) {
-      document.querySelectorAll(".barButton").forEach(button => {
-        button.classList.toggle("active", Number(button.dataset.level) === level);
-      });
+    // 3. 處理觸控、滑動坐標邏輯
+    function handlePointer(e) {
+      const rect = container.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      let pct = offsetX / rect.width;
+      pct = Math.max(0, Math.min(1, pct)); // 限制在 0~1 之間
+      
+      const level = Math.round(pct * 10);
+      if (level !== currentLevel) {
+        updateUI(level);
+      }
     }
 
+    // 4. 綁定滑動事件（Pointer Events 完美相容全平台觸控）
+    container.addEventListener("pointerdown", (e) => {
+      isDragging = true;
+      container.setPointerCapture(e.pointerId);
+      handlePointer(e);
+    });
+
+    container.addEventListener("pointermove", (e) => {
+      if (!isDragging) return;
+      handlePointer(e);
+    });
+
+    container.addEventListener("pointerup", (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      container.releasePointerCapture(e.pointerId);
+      sendVolume(currentLevel); // 手指離開時才觸發 API 請求
+    });
+
+    // 5. 快捷鍵點擊直接觸發
+    function triggerVolume(level) {
+      updateUI(level);
+      sendVolume(level);
+    }
+
+    // 6. 送出數據至 Cloudflare Worker
     async function sendVolume(level) {
+      if (isSending) return;
+      isSending = true;
+
       const volume = VOLUME_MAP[level];
-      setStatus(`送出 ${volume}%...`);
+      setStatus("SENDING", "sync");
 
       try {
         const response = await fetch(API_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             token: TOKEN,
             type: "volume",
@@ -441,21 +314,23 @@
         });
 
         const data = await response.json();
+        if (!response.ok || data.success === false) throw new Error();
 
-        if (!response.ok || data.success === false) {
-          throw new Error(data.error || `HTTP ${response.status}`);
-        }
-
-        markActive(level);
-        currentLevel.textContent = String(volume);
-        currentUnit.style.display = "inline";
-        setStatus(`已送出 ${volume}%`, "ok");
-      } catch (error) {
-        setStatus(`送出失敗：${error.message}`, "error");
+        setStatus("READY", "sync");
+        setTimeout(() => setStatus("READY", "idle"), 1000);
+      } catch (err) {
+        setStatus("ERROR", "error");
+      } finally {
+        isSending = false;
       }
     }
 
-    renderBars();
+    function setStatus(text, mode = "idle") {
+      statusEl.className = "status " + (mode === "sync" ? "sync" : mode === "error" ? "error" : "");
+      statusText.textContent = text;
+    }
+
+    initBars();
   </script>
 </body>
 </html>
