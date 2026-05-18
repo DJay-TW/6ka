@@ -12,7 +12,9 @@
       --accent-glow: rgba(216, 183, 109, 0.2);
       --text: #f5f7fb;
       --muted: #525a6c;
-      --line: rgba(255, 255, 255, 0.06);
+      /* 調整未點亮柱子顏色，使其可見 */
+      --line: rgba(255, 255, 255, 0.12); /* 提高可見度 */
+      --bar-unlit: #222530; /* 深灰色未點亮柱子 */
     }
 
     * {
@@ -35,7 +37,7 @@
     .app {
       width: min(420px, 100%);
       background: var(--card);
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 32px;
       padding: 28px 24px;
       box-shadow: 0 40px 90px rgba(0,0,0,0.7);
@@ -66,7 +68,7 @@
       background: rgba(255,255,255,0.02);
       padding: 5px 12px;
       border-radius: 99px;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .dot {
@@ -103,7 +105,7 @@
     .slider-container {
       position: relative;
       background: rgba(255, 255, 255, 0.01);
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 20px;
       padding: 24px 12px;
       height: 140px;
@@ -119,12 +121,12 @@
       width: 100%;
       min-height: 5px;
       border-radius: 99px;
-      background: rgba(255, 255, 255, 0.06);
+      background: var(--bar-unlit); /* 預設使用深灰色 */
       pointer-events: none; /* 讓事件由父層統一計算 */
       transition: background 0.1s ease, box-shadow 0.1s ease;
     }
 
-    /* 點亮狀態：低於或等於當前音量者全部點亮，形成進度條效果 */
+    /* 點亮狀態：只點亮當前檔位，不顯示進度 */
     .bar.active {
       background: linear-gradient(180deg, #f3dfae, var(--accent));
       box-shadow: 0 0 12px var(--accent-glow);
@@ -140,7 +142,7 @@
     .btn {
       flex: 1;
       appearance: none;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       background: rgba(255, 255, 255, 0.03);
       color: var(--text);
       padding: 15px;
@@ -176,7 +178,6 @@
       <div class="value"><span id="currentLevel">50</span><span class="unit">%</span></div>
     </section>
 
-    <!-- 21 檔動態等化器型滑動條 -->
     <section class="slider-container" id="sliderContainer"></section>
 
     <footer class="quick-actions">
@@ -227,8 +228,9 @@
       const bars = container.querySelectorAll(".bar");
       bars.forEach(bar => {
         const l = Number(bar.dataset.level);
-        // 如果是 0% (Mute)，全部熄滅；其餘則亮起小於等於當前檔位的柱子
-        bar.classList.toggle("active", l <= level && level > 0);
+        // 優化邏輯：獨立檔位指示。只有當前檔位點亮，其餘熄滅。
+        // 當 level === 0 (Mute) 時，無任何檔位亮起。
+        bar.classList.toggle("active", l === level && level > 0);
       });
     }
 
@@ -261,7 +263,7 @@
       if (!isDragging) return;
       isDragging = false;
       container.releasePointerCapture(e.pointerId);
-      sendVolume(currentLevel); // 放開手指的瞬間，才噴發 API，保護後端並防止卡頓
+      sendVolume(currentLevel); // 放開手指的瞬間，才噴發 API
     });
 
     // 5. 快切按鈕直接觸發 (Mute=0, Normal=10, Max=20)
@@ -293,10 +295,10 @@
         if (!response.ok || data.success === false) throw new Error();
 
         setStatus("READY", "sync");
-        setTimeout(() => setStatus("READY", "idle"), 800);
+        // 移除額外的 setTimeout，使狀態反饋更直接
       } catch (err) {
         setStatus("ERROR", "error");
-      } finaly {
+      } finally {
         isSending = false;
       }
     }
