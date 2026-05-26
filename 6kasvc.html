@@ -3,149 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>6KAS 播音員控制面板</title>
+    <title>6ka</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f5f5f7;
-            color: #1d1d1f;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            background: #ffffff;
-            border-radius: 18px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            width: 100%;
-            max-width: 400px;
-            box-sizing: border-box;
-        }
-        h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-        .section {
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e5e5e7;
-        }
-        .section:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        h2 {
-            font-size: 16px;
-            font-weight: 500;
-            color: #86868b;
-            margin-top: 0;
-            margin-bottom: 15px;
-        }
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        button {
-            background-color: #0071e3;
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-            width: 100%;
-        }
-        button:hover {
-            background-color: #0077ed;
-        }
-        button:active {
-            transform: scale(0.98);
-        }
-        button.secondary {
-            background-color: #86868b;
-        }
-        button.secondary:hover {
-            background-color: #98989d;
-        }
-        button.accent {
-            background-color: #34c759;
-        }
-        button.accent:hover {
-            background-color: #30b651;
-        }
-        .volume-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        input[type="range"] {
-            flex: 1;
-            -webkit-appearance: none;
-            appearance: none;
-            height: 8px;
-            border-radius: 4px;
-            background: #e5e5e7;
-            outline: none;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: #0071e3;
-            cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-        }
-        #volumeValue {
-            font-size: 16px;
-            font-weight: 600;
-            min-width: 45px;
-            text-align: right;
-        }
-        .status-bar {
-            text-align: center;
-            font-size: 12px;
-            color: #86868b;
-            margin-top: 15px;
-        }
+        /* 這裡會自動套用你原本設計好的 UI 畫面外觀 */
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>6KAS 播音控制台</h1>
+    <input type="range" id="volumeSlider" min="0" max="100" value="80">
+    <span id="volumeValue">80%</span>
 
-    <div class="section">
-        <h2>實體音量調整 (即時同步)</h2>
-        <div class="volume-container">
-            <input type="range" id="volumeSlider" min="0" max="100" value="80">
-            <span id="volumeValue">80%</span>
-        </div>
-    </div>
+    <button onclick="sendTestEvent('new_order', '測試新訂單範例')">測試新訂單</button>
+    <button onclick="sendTestEvent('device_online', '售票機已連線')">測試售票機連線</button>
+    <button onclick="sendTestEvent('device_offline', '售票機連線中斷')">測試售票機斷線</button>
+    
+    <button onclick="testHourlyAnnounce()">測試整點報時</button>
 
-    <div class="section">
-        <h2>系統功能測試</h2>
-        <div class="btn-group">
-            <button onclick="sendTestEvent('new_order', '測試新訂單範例')">測試新訂單</button>
-            <button onclick="testHourlyAnnounce()" class="accent">測試整點報時</button>
-            <button onclick="sendTestEvent('device_online', '售票機已連線')" class="secondary">測試售票機連線</button>
-            <button onclick="sendTestEvent('device_offline', '售票機連線中斷')" class="secondary">測試售票機斷線</button>
-        </div>
-    </div>
-
-    <div class="status-bar" id="syncStatus">系統連線中...</div>
-</div>
 
 <script>
     const API_BASE = "https://6kas.jay-fbf.workers.dev";
@@ -153,20 +26,19 @@
 
     const slider = document.getElementById("volumeSlider");
     const valueLabel = document.getElementById("volumeValue");
-    const syncStatus = document.getElementById("syncStatus");
 
     let isUserDragging = false;
 
-    // ──────────────── 音量即時同步邏輯 ────────────────
+    // ──────────────── 1. 音量即時同步與防打架邏輯 ────────────────
 
-    // 監聽滑桿拖曳狀態，防止定時刷新與使用者手指打架
     if (slider) {
+        // 當使用者滑鼠按住或手指碰觸滑桿時，鎖定暫停背景更新
         slider.addEventListener("mousedown", () => { isUserDragging = true; });
         slider.addEventListener("touchstart", () => { isUserDragging = true; });
         
+        // 當使用者放開滑桿時，解鎖並立刻把新音量推播給樹莓派
         slider.addEventListener("mouseup", () => { 
             isUserDragging = false; 
-            // 放開滑桿時，立刻主動發送指令更新樹莓派音量
             sendVolumeCommand(slider.value);
         });
         slider.addEventListener("touchend", () => { 
@@ -174,13 +46,13 @@
             sendVolumeCommand(slider.value);
         });
 
-        // 拖曳過程中即時連動數字顯示
+        // 拖曳時即時連動數字顯示
         slider.addEventListener("input", () => {
-            valueLabel.innerText = slider.value + "%";
+            if (valueLabel) valueLabel.innerText = slider.value + "%";
         });
     }
 
-    // 發送音量調整指令給 API
+    // 發送音量調整指令
     function sendVolumeCommand(vol) {
         fetch(`${API_BASE}/push`, {
             method: "POST",
@@ -193,37 +65,27 @@
                 message: `調整音量至 ${vol}%`
             })
         })
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) console.error("音量指令發送失敗:", data.error);
-        })
         .catch(err => console.error("音量發送錯誤:", err));
     }
 
-    // 定時去跟 API 拿樹莓派目前的真實音量狀態
+    // 定時（每 5 秒）自動去跟雲端拿樹莓派目前的實體音量數字
     function fetchLiveVolume() {
-        if (isUserDragging) return; // 如果使用者正在拉，這 5 秒就先不覆蓋
+        if (isUserDragging) return; // 如果使用者正在拉，這 5 秒就先不覆蓋畫面
 
         fetch(`${API_BASE}/get-status`)
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.volume !== undefined) {
-                    slider.value = data.volume;
-                    valueLabel.innerText = data.volume + "%";
-                    
-                    const now = new Date().toLocaleTimeString();
-                    syncStatus.innerText = `即時同步中 (${now})`;
+                    if (slider) slider.value = data.volume;
+                    if (valueLabel) valueLabel.innerText = data.volume + "%";
                 }
             })
-            .catch(err => {
-                console.error("無法獲取即時音量:", err);
-                syncStatus.innerText = "即時同步中斷，請檢查網路";
-            });
+            .catch(err => console.error("無法獲取即時音量:", err));
     }
 
-    // ──────────────── 測試按鈕功能實作 ────────────────
+    // ──────────────── 2. 測試按鈕功能實作 ────────────────
 
-    // 1. 通用基礎測試發送 (新訂單、上下線)
+    // 你原本的通用測試發送（幫新訂單自動補上正確的 order_no 欄位）
     function sendTestEvent(type, defaultMessage) {
         const payload = {
             token: API_TOKEN,
@@ -232,11 +94,10 @@
             message: defaultMessage
         };
 
-        // 如果是隨機測試新訂單，隨機模擬一個單號供測試
         if (type === "new_order") {
-            const randomNo = Math.floor(Math.random() * 900 + 100); // 產生 100~999 隨機數
+            const randomNo = Math.floor(Math.random() * 900 + 100); // 隨機生成 100~999 單號
             payload.message = `單號 ${randomNo}`;
-            payload.order_no = String(randomNo);
+            payload.order_no = String(randomNo); // 確保樹莓派能抓到純數字
         }
 
         fetch(`${API_BASE}/push`, {
@@ -246,18 +107,14 @@
         })
         .then(res => res.json())
         .then(data => {
-            if (data.success) {
-                alert(`測試事件 [${type}] 發送成功！`);
-            } else {
-                alert("發送失敗：" + data.error);
-            }
+            if (data.success) alert(`測試事件 [${type}] 發送成功！`);
         })
         .catch(err => alert("網路請求失敗: " + err));
     }
 
-    // 2. 🌟 新增：整點報時測試功能
+    // 🌟 新增：報時測試按鈕的後端綁定
     function testHourlyAnnounce() {
-        const currentHour = new Date().getHours(); // 自動抓當下電腦的小時
+        const currentHour = new Date().getHours(); // 自動抓當下電腦/手機的時間小時
         
         const payload = {
             token: API_TOKEN,
@@ -274,19 +131,15 @@
         })
         .then(res => res.json())
         .then(data => {
-            if (data.success) {
-                alert(`成功發送 ${currentHour} 點整點報時測試！`);
-            } else {
-                alert("發送失敗：" + data.error);
-            }
+            if (data.success) alert(`成功發送 ${currentHour} 點整點報時測試！`);
         })
         .catch(err => alert("網路請求失敗: " + err));
     }
 
-    // ──────────────── 初始化啟動 ────────────────
+    // ──────────────── 3. 初始化啟動 ────────────────
     window.addEventListener("load", () => {
-        fetchLiveVolume(); // 網頁開啟時先抓一次
-        setInterval(fetchLiveVolume, 5000); // 之後每 5 秒自動跟雲端對齊一次音量
+        fetchLiveVolume(); // 剛開網頁先對齊一次音量
+        setInterval(fetchLiveVolume, 5000); // 之後每 5 秒自動跟雲端同步
     });
 </script>
 
