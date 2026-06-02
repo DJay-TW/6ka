@@ -170,10 +170,11 @@
     .grid { 
       display: flex; 
       flex-direction: column; 
-      gap: 6px; 
-      max-height: 270px; /* 控制主要欄位高度上限，多出可滾動 */
+      gap: 7px; 
+      max-height: 282px; /* 控制主要欄位高度上限，多出可滾動 */
       overflow-y: auto; 
       padding-right: 2px;
+      padding-bottom: 10px; /* 防止最後一列框線與發光被 overflow 裁切 */
     }
     .hdr, .row { display: grid; grid-template-columns: 78px 1fr 38px 1fr; gap: 6px; align-items: center; }
     .hdr { padding: 4px 4px; color: var(--muted); font-size: 9px; font-weight: bold; letter-spacing: 0.5px; flex-shrink: 0; }
