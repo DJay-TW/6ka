@@ -3,329 +3,71 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>找零清點 - 超級雷射終端版</title>
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3Cfilter id='glow' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur stdDeviation='18' result='blur'/%3E%3CfeMerge%3E%3CfeMergeNode in='blur'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Cstyle%3E.bg%7Bfill:%23050508;%7D.ring1%7Bstroke:%2300ffcc;filter:url(%23glow);fill:none;stroke-width:14;stroke-linecap:round;stroke-dasharray:350 100 200 50;%7D.ring2%7Bstroke:%23ff00ff;filter:url(%23glow);fill:none;stroke-width:10;stroke-linecap:round;stroke-dasharray:80 50 250 80;%7D.bolt%7Bfill:%23ffffff;filter:url(%23glow);%7D.dots%7Bfill:%2300ffcc;opacity:0.6;%7D%3C/style%3E%3Crect class='bg' width='512' height='512'/%3E%3Cg transform='translate(0, 0)'%3E%3Ccircle class='ring1' cx='256' cy='256' r='190'/%3E%3Ccircle class='ring2' cx='256' cy='256' r='140'/%3E%3Cpath class='bolt' d='M236 70 L340 70 L250 220 L360 220 L180 442 L250 270 L160 270 Z'/%3E%3Ccircle class='dots' cx='120' cy='120' r='8'/%3E%3Ccircle class='dots' cx='392' cy='120' r='8'/%3E%3Ccircle class='dots' cx='120' cy='392' r='8'/%3E%3Ccircle class='dots' cx='392' cy='392' r='8'/%3E%3C/g%3E%3C/svg%3E">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3Cfilter id='glow' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur stdDeviation='18' result='blur'/%3E%3CfeMerge%3E%3CfeMergeNode in='blur'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Cstyle%3E.bg%7Bfill:%23050508;%7D.ring1%7Bstroke:%2300ffcc;filter:url(%23glow);fill:none;stroke-width:14;stroke-linecap:round;stroke-dasharray:350 100 200 50;%7D.ring2%7Bstroke:%23ff00ff;filter:url(%23glow);fill:none;stroke-width:10;stroke-linecap:round;stroke-dasharray:80 50 250 80;%7D.bolt%7Bfill:%23ffffff;filter:url(%23glow);%7D.dots%7Bfill:%2300ffcc;opacity:0.6;%7D%3C/style%3E%3Crect class='bg' width='512' height='512'/%3E%3Cg transform='translate(0, 0)'%3E%3Ccircle class='ring1' cx='256' cy='256' r='190'/%3E%3Ccircle class='ring2' cx='256' cy='256' r='140'/%3E%3Cpath class='bolt' d='M236 70 L340 70 L250 220 L360 220 L180 442 L250 270 L160 270 Z'/%3E%3Ccircle class='dots' cx='120' cy='120' r='8'/%3E%3Ccircle class='dots' cx='392' cy='120' r='8'/%3E%3Ccircle class='dots' cx='120' cy='392' r='8'/%3E%3Ccircle class='dots' cx='392' cy='392' r='8'/%3E%3C/g%3E%3C/svg%3E">
+  <title>找零清點</title>
+  <link rel="icon" type="image/png" href="cash-diff-icon.png" />
+  <link rel="apple-touch-icon" href="cash-diff-icon.png" />
+  <meta name="theme-color" content="#030305" />
   <style>
-    :root {
-      color-scheme: dark;
-      --bg: #030305;
-      --panel: rgba(8, 10, 18, 0.9);
-      --panel2: rgba(4, 5, 8, 0.95);
-      --text: #e2f1f5;
-      --muted: #526b7d;
-      --line: #161e2e;
-      
-      /* 極限霓虹發光色 */
-      --neon-cyan: #00ffcc;
-      --neon-magenta: #ff00ff;
-      --neon-red: #ff0033;
-      --glow-cyan: 0 0 15px #00ffcc, 0 0 30px rgba(0, 255, 204, 0.3);
-      --glow-magenta: 0 0 15px #ff00ff, 0 0 30px rgba(255, 0, 255, 0.3);
+    :root{
+      color-scheme:dark;
+      --bg:#0f1115; --panel:#151821; --panel2:#10131a; --text:#e7e7e7;
+      --muted:#a9a9a9; --line:#262b36; --btn:#232836; --btn2:#1a1f2b; --focus:#7a7a7a;
     }
-    
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Noto Sans TC", monospace;
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-      position: relative;
-    }
-
-    /* 降低干擾：大幅淡化背景掃描線 */
-    body::before {
-      content: " ";
-      display: block;
-      position: fixed;
-      top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-      z-index: 99999;
-      background-size: 100% 4px, 6px 100%;
-      pointer-events: none;
-    }
-
-    .wrap {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 16px 10px;
-      position: relative;
-      z-index: 10;
-    }
-
-    .card {
-      background: var(--panel);
-      border: 2px solid #10b981;
-      border-image: linear-gradient(to bottom right, var(--neon-cyan), var(--neon-magenta)) 1;
-      border-radius: 1px;
-      padding: 16px;
-      box-shadow: 0 0 35px rgba(0, 255, 204, 0.2), inset 0 0 20px rgba(255, 0, 255, 0.1);
-      backdrop-filter: blur(10px);
-      position: relative;
-    }
-
-    /* 角隅科幻邊飾 */
-    .card::before {
-      content: ""; position: absolute; top: -2px; left: -2px; width: 16px; height: 16px;
-      border-top: 4px solid var(--neon-cyan); border-left: 4px solid var(--neon-cyan);
-    }
-    .card::after {
-      content: ""; position: absolute; bottom: -2px; right: -2px; width: 16px; height: 16px;
-      border-bottom: 4px solid var(--neon-magenta); border-right: 4px solid var(--neon-magenta);
-    }
-
-    .title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 16px;
-      border-bottom: 1px dashed rgba(0, 255, 204, 0.2);
-      padding-bottom: 10px;
-    }
-
-    .title h1 {
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: 1px;
-      color: #fff;
-      text-shadow: var(--glow-cyan);
-    }
-
-    .chip {
-      font-size: 11px;
-      font-weight: bold;
-      padding: 4px 10px;
-      border: 1px solid var(--neon-cyan);
-      color: var(--neon-cyan);
-      background: rgba(0, 255, 204, 0.1);
-      box-shadow: var(--glow-cyan);
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.7; box-shadow: 0 0 8px rgba(0, 255, 204, 0.4); }
-      50% { opacity: 1; box-shadow: 0 0 20px rgba(0, 255, 204, 0.8); }
-      100% { opacity: 0.7; box-shadow: 0 0 8px rgba(0, 255, 204, 0.4); }
-    }
-
-    .grid { display: grid; gap: 10px; }
-    
-    /* 調整比例，留更多空間給輸入框 */
-    .hdr, .row {
-      display: grid;
-      grid-template-columns: 65px 1fr 42px 1fr;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .hdr {
-      padding: 0 2px;
-      color: var(--muted);
-      font-size: 11px;
-      letter-spacing: 1px;
-    }
-
-    .denom {
-      font-size: 18px;
-      font-weight: 900;
-      color: #fff;
-      text-shadow: 0 0 5px rgba(255,255,255,0.4);
-      border-left: 3px solid var(--neon-magenta);
-      padding-left: 6px;
-    }
-
-    input {
-      width: 100%;
-      font-size: 20px;
-      font-weight: bold;
-      padding: 10px 4px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: var(--panel2);
-      color: #fff;
-      outline: none;
-      transition: all 0.2s ease;
-      text-align: center;
-      font-family: inherit;
-    }
-
-    input:focus {
-      border-color: var(--neon-cyan);
-      box-shadow: var(--glow-cyan), inset 0 0 8px rgba(0,255,204,0.2);
-      background: #061118;
-    }
-
-    .eqbtn {
-      width: 100%;
-      height: 44px;
-      border: 1px solid var(--neon-magenta);
-      background: rgba(255, 0, 255, 0.08);
-      color: var(--neon-magenta);
-      font-size: 20px;
-      font-weight: 900;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
-    }
-
-    .eqbtn:hover {
-      background: var(--neon-magenta);
-      color: #000;
-      box-shadow: var(--glow-magenta);
-    }
-
-    .actions { display: flex; gap: 8px; margin-top: 14px; }
-    .cashbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
-    
-    .cashbox-field label {
-      display: block;
-      color: var(--muted);
-      font-size: 11px;
-      margin-bottom: 4px;
-    }
-
-    /* 💥 解決防換行問題 💥 */
-    .btn {
-      flex: 1;
-      border: 1px solid var(--neon-cyan);
-      background: rgba(0, 255, 204, 0.05);
-      color: var(--neon-cyan);
-      font-size: 13px; /* 微調字級以適應窄螢幕 */
-      font-weight: 800;
-      padding: 12px 4px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-shadow: 0 0 4px rgba(0,255,204,0.4);
-      white-space: nowrap; /* 絕對不換行 */
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .btn:hover {
-      background: var(--neon-cyan);
-      color: #030305;
-      box-shadow: var(--glow-cyan);
-    }
-
-    .btn.secondary {
-      border-color: var(--muted);
-      color: #cbd5e1;
-      background: transparent;
-      text-shadow: none;
-    }
-
-    /* 💥 手機版文字防折行大優化 💥 */
-    textarea {
-      width: 100%;
-      margin-top: 14px;
-      min-height: 250px;
-      resize: vertical;
-      font-size: 12.5px; /* 縮小字級防止長資料換行 */
-      letter-spacing: 0.5px;
-      line-height: 1.4;
-      padding: 12px;
-      border: 1px solid rgba(0, 255, 204, 0.15);
-      background: #020408;
-      color: var(--neon-cyan);
-      box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
-      outline: none;
-      font-family: inherit;
-      white-space: pre;
-      overflow-x: auto; /* 若螢幕真的極端窄，允許橫向滾動而不直接折行 */
-    }
-
-    .small {
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 11px;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    #sourceInfo {
-      color: var(--neon-magenta);
-      font-weight: bold;
-    }
-
-    /* 💥 超誇張雷射粒子動畫 💥 */
-    .particle {
-      position: fixed;
-      pointer-events: none;
-      border-radius: 50%;
-      z-index: 10000;
-      animation: laserExplode 1.5s cubic-bezier(0.1, 0.8, 0.25, 1) forwards;
-    }
-
-    @keyframes laserExplode {
-      0% {
-        transform: translate(0, 0) scale(1) rotate(0deg);
-        opacity: 1;
-        filter: brightness(2);
-      }
-      50% {
-        filter: brightness(1.5);
-        opacity: 0.9;
-      }
-      100% {
-        transform: translate(var(--mx), var(--my)) scale(0) rotate(360deg);
-        opacity: 0;
-        filter: brightness(1);
-      }
-    }
-
-    @media (max-width: 375px) {
-      .btn { font-size: 11px; padding: 10px 2px; }
-      .denom { font-size: 16px; }
-      input { font-size: 18px; }
-      textarea { font-size: 11.5px; }
-    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans TC","Microsoft JhengHei",sans-serif;background:linear-gradient(180deg,var(--bg),#0b0d11);color:var(--text)}
+    .wrap{max-width:720px;margin:0 auto;padding:14px 12px 18px}
+    .card{background:rgba(21,24,33,.92);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .title h1{margin:0;font-size:18px;font-weight:700;letter-spacing:.2px}
+    .chip{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:rgba(16,19,26,.8);user-select:none}
+    .grid{display:grid;gap:10px}
+    .hdr,.row{display:grid;grid-template-columns:84px 1fr 38px 1fr;gap:8px;align-items:center}
+    .hdr{padding:6px 4px 2px;color:var(--muted);font-size:12px}
+    .denom{font-size:18px;font-weight:700;color:#f0f0f0;padding-left:6px}
+    input{width:100%;font-size:20px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--text);outline:none}
+    input:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(122,122,122,.18)}
+    .eqbtn{width:38px;height:46px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(180deg,var(--btn),var(--btn2));color:var(--text);font-size:20px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+    .eqbtn:active,.btn:active{transform:translateY(1px)}
+    .actions{display:flex;gap:10px;margin-top:12px}
+    .cashbox-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .cashbox-field label{display:block;color:var(--muted);font-size:12px;margin:0 0 5px 4px}
+    .btn{flex:1;border:1px solid var(--line);background:linear-gradient(180deg,var(--btn),var(--btn2));color:var(--text);font-size:16px;font-weight:700;padding:12px;border-radius:14px;cursor:pointer;user-select:none}
+    .btn.secondary{flex:0 0 auto;padding:12px 14px;color:var(--muted)}
+    textarea{width:100%;margin-top:12px;min-height:240px;resize:vertical;font-size:15px;line-height:1.35;padding:12px;border-radius:14px;border:1px solid var(--line);background:#0b0e14;color:var(--text);outline:none;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre}
+    .small{margin-top:10px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    @media (max-width:420px){.denom{font-size:17px}input{font-size:19px;padding:11px}.hdr,.row{grid-template-columns:74px 1fr 34px 1fr}.eqbtn{width:34px;height:44px;border-radius:12px}textarea{font-size:14px}}
   </style>
 </head>
 <body>
-
   <div class="wrap">
     <div class="card">
       <div class="title">
-        <h1>找零清點 // QUANTUM_CASH</h1>
+        <h1>找零金額清點</h1>
         <div class="chip" id="status">Ready</div>
       </div>
-      
       <div class="hdr">
-        <div>面額</div>
-        <div style="padding-left:4px;">A(系統)</div>
-        <div>同步</div>
-        <div style="padding-left:4px;">B(實際)</div>
+        <div></div><div style="padding-left:4px;">A(系統)</div><div></div><div style="padding-left:4px;">B(實際)</div>
       </div>
-      
       <div class="grid" id="rows"></div>
-      
       <div class="cashbox-grid">
         <div class="cashbox-field">
-          <label for="cashboxSystem">▶ SYSTEM_CASHBOX</label>
-          <input id="cashboxSystem" inputmode="numeric" readonly placeholder="LOCK" />
+          <label for="cashboxSystem">系統錢箱</label>
+          <input id="cashboxSystem" inputmode="numeric" readonly placeholder="系統" />
         </div>
         <div class="cashbox-field">
-          <label for="cashboxActual">▶ ACTUAL_CASHBOX</label>
-          <input id="cashboxActual" inputmode="numeric" placeholder="INPUT" />
+          <label for="cashboxActual">實際錢箱</label>
+          <input id="cashboxActual" inputmode="numeric" placeholder="實際" />
         </div>
       </div>
-      
       <div class="actions">
-        <button class="btn" id="copyBtn">複製核心數據</button>
-        <button class="btn secondary" id="refreshBtn">同步系統</button>
-        <button class="btn secondary" id="resetBtn">資料清空</button>
+        <button class="btn" id="copyBtn">複製結果</button>
+        <button class="btn secondary" id="refreshBtn">更新系統</button>
+        <button class="btn secondary" id="resetBtn">清空</button>
       </div>
-      
       <textarea id="out" readonly spellcheck="false"></textarea>
-      
       <div class="small">
-        <span>[SYS] 按下 ➔ 複製資料 A ➔ B</span>
-        <span id="sourceInfo">尚未同步量子數據</span>
+        <span>按 = 可將 A 系統數量複製到 B 實際數量</span>
+        <span id="sourceInfo">尚未載入系統資料</span>
       </div>
     </div>
   </div>
@@ -348,44 +90,6 @@
   denoms.forEach(d => state[d] = { a: "", b: "" });
   state.cashboxSystem = "";
   state.cashboxActual = "";
-
-  // 💥 升級版：超級雷射爆炸粒子特效 💥
-  function createLaserParticles(e, baseColor) {
-    const rect = e.target.getBoundingClientRect();
-    const x = e.clientX || (rect.left + rect.width / 2);
-    const y = e.clientY || (rect.top + rect.height / 2);
-    
-    // 暴增到 50 個粒子！
-    const count = 50; 
-    for (let i = 0; i < count; i++) {
-      const p = document.createElement("div");
-      p.className = "particle";
-      p.style.left = x + "px";
-      p.style.top = y + "px";
-      
-      // 強效雷射霓虹發光
-      p.style.background = baseColor;
-      p.style.boxShadow = `0 0 10px ${baseColor}, 0 0 20px ${baseColor}, 0 0 40px ${baseColor}`;
-      
-      // 隨機大小與極端噴發距離
-      const size = Math.random() * 8 + 4; 
-      p.style.width = size + "px";
-      p.style.height = size + "px";
-      
-      // 擴大喷射範圍（高達 350px 像素半徑）
-      const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * 250 + 100; 
-      const mx = Math.cos(angle) * distance;
-      const my = Math.sin(angle) * distance;
-      
-      p.style.setProperty('--mx', mx + 'px');
-      p.style.setProperty('--my', my + 'px');
-      
-      document.body.appendChild(p);
-      // 延長生命週期至 1.5 秒
-      setTimeout(() => p.remove(), 1500);
-    }
-  }
 
   const fmtMoney = n => {
     const value = Math.round(Number(n || 0));
@@ -419,7 +123,7 @@
   function update() {
     let aTotal = 0;
     let bTotal = 0;
-    const lines = ["【 金額差異動態分析報表 】", "==========================="];
+    const lines = ["金額差異"];
 
     denoms.forEach(denom => {
       const aQty = qty(denom, "a");
@@ -432,17 +136,17 @@
     });
 
     lines.push("");
-    lines.push(`系統總計 // ${fmtMoney(aTotal)}`);
-    lines.push(`實際總計 // ${fmtMoney(bTotal)}`);
-    lines.push(`清點差值 // ${fmtMoney(bTotal - aTotal)}`);
+    lines.push(`系統 ${fmtMoney(aTotal)}`);
+    lines.push(`實際 ${fmtMoney(bTotal)}`);
+    lines.push(`差值 ${fmtMoney(bTotal - aTotal)}`);
+    if (bTotal - aTotal === 0) lines.push("今日不用補錢");
 
     const cashboxSystem = Number(state.cashboxSystem || 0);
     const cashboxActual = Number(state.cashboxActual || 0);
     lines.push("");
-    lines.push(`---------------------------`);
-    lines.push(`系統錢箱 // ${fmtMoney(cashboxSystem)}`);
-    lines.push(`實際錢箱 // ${fmtMoney(cashboxActual)}`);
-    lines.push(`錢箱差值 // ${fmtMoney(cashboxActual - cashboxSystem)}`);
+    lines.push(`系統錢箱 ${fmtMoney(cashboxSystem)}`);
+    lines.push(`實際錢箱 ${fmtMoney(cashboxActual)}`);
+    lines.push(`差值 ${fmtMoney(cashboxActual - cashboxSystem)}`);
     outEl.value = lines.join("\n");
   }
 
@@ -458,36 +162,33 @@
 
       const aIn = document.createElement("input");
       aIn.inputMode = "numeric";
-      aIn.placeholder = "0";
+      aIn.placeholder = "A";
       aIn.value = state[denom].a;
       aIn.addEventListener("input", () => {
         state[denom].a = sanitize(aIn.value);
         if (aIn.value !== state[denom].a) aIn.value = state[denom].a;
         update();
       });
-      aIn.addEventListener("focus", (e) => createLaserParticles(e, "var(--neon-cyan)"));
 
       const bIn = document.createElement("input");
       bIn.inputMode = "numeric";
-      bIn.placeholder = "0";
+      bIn.placeholder = "B";
       bIn.value = state[denom].b;
       bIn.addEventListener("input", () => {
         state[denom].b = sanitize(bIn.value);
         if (bIn.value !== state[denom].b) bIn.value = state[denom].b;
         update();
       });
-      bIn.addEventListener("focus", (e) => createLaserParticles(e, "var(--neon-magenta)"));
 
       const eq = document.createElement("button");
       eq.className = "eqbtn";
       eq.type = "button";
-      eq.textContent = "➔";
+      eq.textContent = "=";
       eq.title = "把 A 複製到 B";
-      eq.addEventListener("click", (e) => {
-        createLaserParticles(e, "var(--neon-magenta)");
+      eq.addEventListener("click", () => {
         state[denom].b = state[denom].a || "";
         bIn.value = state[denom].b;
-        bump("Sync_OK");
+        bump("A=B");
         update();
       });
 
@@ -497,10 +198,10 @@
   }
 
   async function loadSystemCash() {
-    bump("Syncing");
+    bump("Loading");
     const response = await fetch(CASH_API_URL, { cache: "no-store" });
     const payload = await response.json();
-    if (!payload.ok) throw new Error("SYNC_FAILED");
+    if (!payload.ok) throw new Error(payload.error || "系統資料讀取失敗");
     denoms.forEach(denom => {
       const row = payload.denominations && payload.denominations[String(denom)];
       state[denom].a = row && row.quantity != null ? String(row.quantity) : "";
@@ -511,12 +212,11 @@
     update();
     const total = fmtMoney(payload.usable_total_amount);
     const time = payload.generated_at ? new Date(payload.generated_at).toLocaleTimeString("zh-TW", { hour12: false }) : "-";
-    sourceInfoEl.textContent = `量子帳目: ${total} / 同步時間: ${time}`;
-    bump("Online");
+    sourceInfoEl.textContent = `系統 ${total} / ${time}`;
+    bump("Updated");
   }
 
-  async function copyOutput(e) {
-    createLaserParticles(e, "var(--neon-cyan)");
+  async function copyOutput() {
     try {
       await navigator.clipboard.writeText(outEl.value || "");
       bump("Copied");
@@ -528,14 +228,13 @@
     }
   }
 
-  function resetActual(e) {
-    createLaserParticles(e, "var(--neon-red)");
+  function resetActual() {
     denoms.forEach(d => state[d].b = "");
     state.cashboxActual = "";
     cashboxActualEl.value = "";
     buildRows();
     update();
-    bump("Wiped");
+    bump("Cleared");
   }
 
   cashboxActualEl.addEventListener("input", () => {
@@ -543,19 +242,14 @@
     if (cashboxActualEl.value !== state.cashboxActual) cashboxActualEl.value = state.cashboxActual;
     update();
   });
-  cashboxActualEl.addEventListener("focus", (e) => createLaserParticles(e, "var(--neon-cyan)"));
-
   copyBtn.addEventListener("click", copyOutput);
-  refreshBtn.addEventListener("click", (e) => {
-    createLaserParticles(e, "var(--neon-cyan)");
-    loadSystemCash().catch(() => bump("Error"));
-  });
+  refreshBtn.addEventListener("click", () => loadSystemCash().catch(error => bump(error.message)));
   resetBtn.addEventListener("click", resetActual);
 
   buildRows();
   update();
-  loadSystemCash().catch(() => {
-    sourceInfoEl.textContent = "OFFLINE_MODE // 核心斷開連線";
+  loadSystemCash().catch(error => {
+    sourceInfoEl.textContent = error.message;
     bump("Offline");
   });
 })();
