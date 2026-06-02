@@ -291,9 +291,9 @@
         <div class="grid-container">
           <div class="hdr">
             <div>面額構成</div>
-            <div style="text-align:center;">A(系統)</div>
+            <div style="text-align:center;">システムデータ</div>
             <div style="text-align:center;">同步</div>
-            <div style="text-align:center;">B(實際)</div>
+            <div style="text-align:center;">実測データ</div>
           </div>
           <div class="grid" id="rows"></div>
         </div>
@@ -318,7 +318,7 @@
         <textarea id="out" readonly spellcheck="false"></textarea>
         
         <div class="small">
-          <span>[SYS] 矩陣複製 A ➔ B</span>
+          <span>[SYS] マトリクスコピー A ➔ B</span>
           <span id="sourceInfo">尚未同步量子數據</span>
         </div>
       </div>
@@ -701,7 +701,7 @@
     lines.push("");
     lines.push(`系統 ${fmtMoney(aTotal)}`);
     lines.push(`實際 ${fmtMoney(bTotal)}`);
-    lines.push(`差值 // ${fmtMoney(bTotal - aTotal)}`);
+    lines.push(`差值 ${fmtMoney(bTotal - aTotal)}`);
 
     const cashboxSystem = Number(state.cashboxSystem || 0);
     const cashboxActual = Number(state.cashboxActual || 0);
