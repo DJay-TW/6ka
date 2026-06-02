@@ -285,7 +285,7 @@
       <div class="ui-content">
         <div class="title">
           <h1>找零清點 ㊙︎ QUANTUM_CORE</h1>
-          <div class="chip" id="status">Ready</div>
+          <div class="chip" id="status">▪︎Ready</div>
         </div>
         
         <div class="grid-container">
@@ -310,9 +310,9 @@
         </div>
         
         <div class="actions">
-          <button class="btn" id="copyBtn">複製核心數據</button>
-          <button class="btn" id="refreshBtn">同步系統</button>
-          <button class="btn" id="resetBtn">データクリア</button>
+          <button class="btn" id="copyBtn">▪︎ 複製核心數據</button>
+          <button class="btn" id="refreshBtn">▪︎ 同步系統</button>
+          <button class="btn" id="resetBtn">▪︎ データクリア</button>
         </div>
         
         <textarea id="out" readonly spellcheck="false"></textarea>
@@ -762,7 +762,7 @@
         triggerRowSyncCut(e);
         state[denom].b = state[denom].a || "";
         bIn.value = state[denom].b;
-        bump("Sync_OK");
+        bump("▪︎Sync_OK");
         update();
       });
 
@@ -772,10 +772,10 @@
   }
 
   async function loadSystemCash() {
-    bump("Syncing");
+    bump("▪︎Syncing");
     const response = await fetch(CASH_API_URL, { cache: "no-store" });
     const payload = await response.json();
-    if (!payload.ok) throw new Error("SYNC_FAILED");
+    if (!payload.ok) throw new Error("▪︎SYNC_FAILED");
     denoms.forEach(denom => {
       const row = payload.denominations && payload.denominations[String(denom)];
       state[denom].a = row && row.quantity != null ? String(row.quantity) : "";
@@ -787,7 +787,7 @@
     const total = fmtMoney(payload.usable_total_amount);
     const time = payload.generated_at ? new Date(payload.generated_at).toLocaleTimeString("zh-TW", { hour12: false }) : "-";
     sourceInfoEl.textContent = `量子帳目: ${total} [${time}]`;
-    bump("Online");
+    bump("▪︎Online");
   }
 
   copyBtn.addEventListener("click", async () => {
@@ -795,18 +795,18 @@
     triggerCyanPillars();
     try {
       await navigator.clipboard.writeText(outEl.value || "");
-      bump("Copied");
+      bump("▪︎Copied");
     } catch {
       outEl.focus(); outEl.select();
       document.execCommand("copy");
-      bump("Copied");
+      bump("▪︎Copied");
     }
   });
 
   refreshBtn.addEventListener("click", () => {
     playSyncSound();
     triggerAmberRings();
-    loadSystemCash().catch(() => bump("Error"));
+    loadSystemCash().catch(() => bump("▪︎Error"));
   });
 
   resetBtn.addEventListener("click", () => {
@@ -817,7 +817,7 @@
     cashboxActualEl.value = "";
     buildRows();
     update();
-    bump("Wiped");
+    bump("▪︎Wiped");
   });
 
   cashboxActualEl.addEventListener("focus", (e) => triggerFocusPulse(e));
@@ -830,8 +830,8 @@
   buildRows();
   update();
   loadSystemCash().catch(() => {
-    sourceInfoEl.textContent = "OFFLINE_MODE // 核心連線中斷";
-    bump("Offline");
+    sourceInfoEl.textContent = "▪︎OFFLINE_MODE // 核心連線中斷";
+    bump("▪︎Offline");
   });
 })();
 </script>
