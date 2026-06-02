@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>找零清點 - NERV 終極量子終端</title>
+  <title>找零清點</title>
   <link rel="icon" type="image/png" href="cash-diff-icon.png" />
   <link rel="apple-touch-icon" href="cash-diff-icon.png" />
   <style>
@@ -686,7 +686,7 @@
   function update() {
     let aTotal = 0;
     let bTotal = 0;
-    const lines = ["【 金額差異動態分析報表 】", "==========================="];
+    const lines = ["金額差異", " "];
 
     denoms.forEach(denom => {
       const aQty = qty(denom, "a");
@@ -699,17 +699,17 @@
     });
 
     lines.push("");
-    lines.push(`系統總計 // ${fmtMoney(aTotal)}`);
-    lines.push(`實際總計 // ${fmtMoney(bTotal)}`);
-    lines.push(`清點差值 // ${fmtMoney(bTotal - aTotal)}`);
+    lines.push(`系統 ${fmtMoney(aTotal)}`);
+    lines.push(`實際 ${fmtMoney(bTotal)}`);
+    lines.push(`差值 // ${fmtMoney(bTotal - aTotal)}`);
 
     const cashboxSystem = Number(state.cashboxSystem || 0);
     const cashboxActual = Number(state.cashboxActual || 0);
     lines.push("");
-    lines.push(`---------------------------`);
-    lines.push(`系統錢箱 // ${fmtMoney(cashboxSystem)}`);
-    lines.push(`實際錢箱 // ${fmtMoney(cashboxActual)}`);
-    lines.push(`錢箱差值 // ${fmtMoney(cashboxActual - cashboxSystem)}`);
+    lines.push(` `);
+    lines.push(`系統錢箱 ${fmtMoney(cashboxSystem)}`);
+    lines.push(`實際錢箱 ${fmtMoney(cashboxActual)}`);
+    lines.push(`差值 ${fmtMoney(cashboxActual - cashboxSystem)}`);
     outEl.value = lines.join("\n");
   }
 
