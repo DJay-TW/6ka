@@ -26,6 +26,8 @@
     .eqbtn{width:38px;height:46px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(180deg,var(--btn),var(--btn2));color:var(--text);font-size:20px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
     .eqbtn:active,.btn:active{transform:translateY(1px)}
     .actions{display:flex;gap:10px;margin-top:12px}
+    .cashbox-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .cashbox-field label{display:block;color:var(--muted);font-size:12px;margin:0 0 5px 4px}
     .btn{flex:1;border:1px solid var(--line);background:linear-gradient(180deg,var(--btn),var(--btn2));color:var(--text);font-size:16px;font-weight:700;padding:12px;border-radius:14px;cursor:pointer;user-select:none}
     .btn.secondary{flex:0 0 auto;padding:12px 14px;color:var(--muted)}
     textarea{width:100%;margin-top:12px;min-height:240px;resize:vertical;font-size:15px;line-height:1.35;padding:12px;border-radius:14px;border:1px solid var(--line);background:#0b0e14;color:var(--text);outline:none;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre}
@@ -44,6 +46,16 @@
         <div></div><div style="padding-left:4px;">A(系統)</div><div></div><div style="padding-left:4px;">B(實際)</div>
       </div>
       <div class="grid" id="rows"></div>
+      <div class="cashbox-grid">
+        <div class="cashbox-field">
+          <label for="cashboxSystem">系統錢箱</label>
+          <input id="cashboxSystem" inputmode="numeric" readonly placeholder="系統" />
+        </div>
+        <div class="cashbox-field">
+          <label for="cashboxActual">實際錢箱</label>
+          <input id="cashboxActual" inputmode="numeric" placeholder="實際" />
+        </div>
+      </div>
       <div class="actions">
         <button class="btn" id="copyBtn">複製結果</button>
         <button class="btn secondary" id="refreshBtn">更新系統</button>
@@ -68,9 +80,13 @@
   const copyBtn = document.getElementById("copyBtn");
   const refreshBtn = document.getElementById("refreshBtn");
   const resetBtn = document.getElementById("resetBtn");
+  const cashboxSystemEl = document.getElementById("cashboxSystem");
+  const cashboxActualEl = document.getElementById("cashboxActual");
 
   const state = {};
   denoms.forEach(d => state[d] = { a: "", b: "" });
+  state.cashboxSystem = "";
+  state.cashboxActual = "";
 
   const fmtMoney = n => {
     const value = Math.round(Number(n || 0));
@@ -120,7 +136,13 @@
     lines.push(`系統 ${fmtMoney(aTotal)}`);
     lines.push(`實際 ${fmtMoney(bTotal)}`);
     lines.push(`差值 ${fmtMoney(bTotal - aTotal)}`);
-    if (bTotal - aTotal === 0) lines.push("今日不用補錢");
+
+    const cashboxSystem = Number(state.cashboxSystem || 0);
+    const cashboxActual = Number(state.cashboxActual || 0);
+    lines.push("");
+    lines.push(`系統錢箱 ${fmtMoney(cashboxSystem)}`);
+    lines.push(`實際錢箱 ${fmtMoney(cashboxActual)}`);
+    lines.push(`差值 ${fmtMoney(cashboxActual - cashboxSystem)}`);
     outEl.value = lines.join("\n");
   }
 
@@ -180,6 +202,8 @@
       const row = payload.denominations && payload.denominations[String(denom)];
       state[denom].a = row && row.quantity != null ? String(row.quantity) : "";
     });
+    state.cashboxSystem = payload.cashbox && payload.cashbox.system_amount != null ? String(payload.cashbox.system_amount) : "";
+    cashboxSystemEl.value = state.cashboxSystem;
     buildRows();
     update();
     const total = fmtMoney(payload.usable_total_amount);
@@ -202,11 +226,18 @@
 
   function resetActual() {
     denoms.forEach(d => state[d].b = "");
+    state.cashboxActual = "";
+    cashboxActualEl.value = "";
     buildRows();
     update();
     bump("Cleared");
   }
 
+  cashboxActualEl.addEventListener("input", () => {
+    state.cashboxActual = sanitize(cashboxActualEl.value);
+    if (cashboxActualEl.value !== state.cashboxActual) cashboxActualEl.value = state.cashboxActual;
+    update();
+  });
   copyBtn.addEventListener("click", copyOutput);
   refreshBtn.addEventListener("click", () => loadSystemCash().catch(error => bump(error.message)));
   resetBtn.addEventListener("click", resetActual);
