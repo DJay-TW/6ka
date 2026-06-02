@@ -3,348 +3,196 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cash Diff</title>
+  <title>找零清點</title>
   <style>
     :root{
-      --bg:#0f1115;
-      --panel:#151821;
-      --panel2:#10131a;
-      --text:#e7e7e7;
-      --muted:#a9a9a9;
-      --line:#262b36;
-      --btn:#232836;
-      --btn2:#1a1f2b;
-      --focus:#7a7a7a;
+      color-scheme:dark;
+      --bg:#0f1115; --panel:#151821; --panel2:#10131a; --text:#e7e7e7;
+      --muted:#a9a9a9; --line:#262b36; --btn:#232836; --btn2:#1a1f2b; --focus:#7a7a7a;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-      background:linear-gradient(180deg, var(--bg), #0b0d11);
-      color:var(--text);
-    }
-    .wrap{
-      max-width:720px;
-      margin:0 auto;
-      padding:14px 12px 18px;
-    }
-    .card{
-      background:rgba(21,24,33,.92);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
-    }
-    .title{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .title h1{
-      margin:0;
-      font-size:18px;
-      font-weight:700;
-      letter-spacing:.2px;
-    }
-    .chip{
-      font-size:12px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      color:var(--muted);
-      background:rgba(16,19,26,.8);
-      user-select:none;
-    }
-
-    .grid{
-      display:grid;
-      gap:10px;
-    }
-
-    .hdr{
-      display:grid;
-      grid-template-columns: 84px 1fr 38px 1fr;
-      gap:8px;
-      align-items:center;
-      padding:6px 4px 2px;
-      color:var(--muted);
-      font-size:12px;
-    }
-    .row{
-      display:grid;
-      grid-template-columns: 84px 1fr 38px 1fr;
-      gap:8px;
-      align-items:center;
-    }
-    .denom{
-      font-size:18px;
-      font-weight:700;
-      color:#f0f0f0;
-      padding-left:6px;
-    }
-    input{
-      width:100%;
-      font-size:20px;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:var(--panel2);
-      color:var(--text);
-      outline:none;
-    }
-    input:focus{
-      border-color: var(--focus);
-      box-shadow: 0 0 0 3px rgba(122,122,122,.18);
-    }
-
-    .eqbtn{
-      width:38px;
-      height:46px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:linear-gradient(180deg, var(--btn), var(--btn2));
-      color:var(--text);
-      font-size:20px;
-      font-weight:800;
-      cursor:pointer;
-      user-select:none;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:0;
-    }
-    .eqbtn:active{ transform: translateY(1px); }
-
-    .actions{
-      display:flex;
-      gap:10px;
-      margin-top:12px;
-    }
-    .btn{
-      flex:1;
-      border:1px solid var(--line);
-      background:linear-gradient(180deg, var(--btn), var(--btn2));
-      color:var(--text);
-      font-size:16px;
-      font-weight:700;
-      padding:12px 12px;
-      border-radius:14px;
-      cursor:pointer;
-      user-select:none;
-    }
-    .btn.secondary{
-      flex:0 0 auto;
-      padding:12px 14px;
-      color:var(--muted);
-    }
-    .btn:active{ transform: translateY(1px); }
-
-    textarea{
-      width:100%;
-      margin-top:12px;
-      min-height:210px;
-      resize:vertical;
-      font-size:15px;
-      line-height:1.35;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:#0b0e14;
-      color:var(--text);
-      outline:none;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      white-space:pre;
-    }
-
-    .small{
-      margin-top:10px;
-      color:var(--muted);
-      font-size:12px;
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    @media (max-width:420px){
-      .denom{ font-size:17px; }
-      input{ font-size:19px; padding:11px 11px; }
-      textarea{ font-size:14px; }
-      .hdr{ grid-template-columns: 74px 1fr 34px 1fr; }
-      .row{ grid-template-columns: 74px 1fr 34px 1fr; }
-      .eqbtn{ width:34px; height:44px; border-radius:12px; }
-    }
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans TC","Microsoft JhengHei",sans-serif;background:linear-gradient(180deg,var(--bg),#0b0d11);color:var(--text)}
+    .wrap{max-width:720px;margin:0 auto;padding:14px 12px 18px}
+    .card{background:rgba(21,24,33,.92);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .title h1{margin:0;font-size:18px;font-weight:700;letter-spacing:.2px}
+    .chip{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:rgba(16,19,26,.8);user-select:none}
+    .grid{display:grid;gap:10px}
+    .hdr,.row{display:grid;grid-template-columns:84px 1fr 38px 1fr;gap:8px;align-items:center}
+    .hdr{padding:6px 4px 2px;color:var(--muted);font-size:12px}
+    .denom{font-size:18px;font-weight:700;color:#f0f0f0;padding-left:6px}
+    input{width:100%;font-size:20px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--text);outline:none}
+    input:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(122,122,122,.18)}
+    .eqbtn{width:38px;height:46px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(180deg,var(--btn),var(--btn2));color:var(--text);font-size:20px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+    .eqbtn:active,.btn:active{transform:translateY(1px)}
+    .actions{display:flex;gap:10px;margin-top:12px}
+    .btn{flex:1;border:1px solid var(--line);background:linear-gradient(180deg,var(--btn),var(--btn2));color:var(--text);font-size:16px;font-weight:700;padding:12px;border-radius:14px;cursor:pointer;user-select:none}
+    .btn.secondary{flex:0 0 auto;padding:12px 14px;color:var(--muted)}
+    textarea{width:100%;margin-top:12px;min-height:240px;resize:vertical;font-size:15px;line-height:1.35;padding:12px;border-radius:14px;border:1px solid var(--line);background:#0b0e14;color:var(--text);outline:none;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre}
+    .small{margin-top:10px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    @media (max-width:420px){.denom{font-size:17px}input{font-size:19px;padding:11px}.hdr,.row{grid-template-columns:74px 1fr 34px 1fr}.eqbtn{width:34px;height:44px;border-radius:12px}textarea{font-size:14px}}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
       <div class="title">
-        <h1>找零箱金額差異計算機</h1>
+        <h1>找零金額清點</h1>
         <div class="chip" id="status">Ready</div>
       </div>
-
       <div class="hdr">
-        <div></div>
-        <div style="padding-left:4px;">A(系統)</div>
-        <div style="text-align:center;"></div>
-        <div style="padding-left:4px;">B(實際)</div>
+        <div></div><div style="padding-left:4px;">A(系統)</div><div></div><div style="padding-left:4px;">B(實際)</div>
       </div>
-
       <div class="grid" id="rows"></div>
-
       <div class="actions">
         <button class="btn" id="copyBtn">複製結果</button>
+        <button class="btn secondary" id="refreshBtn">更新系統</button>
         <button class="btn secondary" id="resetBtn">清空</button>
       </div>
-
       <textarea id="out" readonly spellcheck="false"></textarea>
-
       <div class="small">
-        <span>按「＝」可把 A 直接帶到 B</span>
+        <span>按 = 可將 A 系統數量複製到 B 實際數量</span>
+        <span id="sourceInfo">尚未載入系統資料</span>
       </div>
     </div>
   </div>
 
 <script>
 (() => {
+  const CASH_API_URL = "https://6ka-cash-diff-api.jay-fbf.workers.dev/api/cash/current";
   const denoms = [500, 100, 50, 10, 5, 1];
-  const rowsEl = document.getElementById('rows');
-  const outEl = document.getElementById('out');
-  const statusEl = document.getElementById('status');
-  const copyBtn = document.getElementById('copyBtn');
-  const resetBtn = document.getElementById('resetBtn');
-
-  const fmtMoney = (n) => {
-    const sign = n < 0 ? "-" : "";
-    const abs = Math.abs(n);
-    return sign + "$" + abs.toLocaleString("en-US");
-  };
-
-  // diffMoney=0 時，不顯示 d$0（但仍顯示該面額行）
-  const fmtLine = (denom, aQty, bQty, diffMoney) => {
-    if (diffMoney === 0) return `$${denom} ${aQty}=${bQty}`;
-    return `$${denom} ${aQty}=${bQty} d${fmtMoney(diffMoney)}`;
-  };
-
-  // 5元 / 1元 預設值（仍可被修改）
-  const DEFAULTS = {
-    5: { a: "10", b: "10" },  // 你要的預設值
-    1: { a: "17", b: "17" }
-  };
+  const rowsEl = document.getElementById("rows");
+  const outEl = document.getElementById("out");
+  const statusEl = document.getElementById("status");
+  const sourceInfoEl = document.getElementById("sourceInfo");
+  const copyBtn = document.getElementById("copyBtn");
+  const refreshBtn = document.getElementById("refreshBtn");
+  const resetBtn = document.getElementById("resetBtn");
 
   const state = {};
-  denoms.forEach(d => {
-    state[d] = DEFAULTS[d] ? { ...DEFAULTS[d] } : { a: "", b: "" };
-  });
+  denoms.forEach(d => state[d] = { a: "", b: "" });
 
-  function buildRows() {
-    rowsEl.innerHTML = "";
-    denoms.forEach(denom => {
-      const row = document.createElement('div');
-      row.className = "row";
+  const fmtMoney = n => {
+    const value = Math.round(Number(n || 0));
+    const sign = value < 0 ? "-" : "";
+    return sign + "$" + Math.abs(value).toLocaleString("en-US");
+  };
 
-      const denomEl = document.createElement('div');
-      denomEl.className = "denom";
-      denomEl.textContent = `$${denom}`;
+  const sanitize = v => {
+    const s = String(v ?? "").replace(/[^\d]/g, "");
+    return s.length > 1 ? (s.replace(/^0+/, "") || "0") : s;
+  };
 
-      const aIn = document.createElement('input');
-      aIn.inputMode = "numeric";
-      aIn.placeholder = "A";
-      aIn.value = state[denom].a;
-      aIn.addEventListener('input', () => {
-        state[denom].a = sanitize(aIn.value);
-        if (aIn.value !== state[denom].a) aIn.value = state[denom].a;
-        update();
-      });
+  const qty = (denom, side) => {
+    const value = state[denom][side];
+    if (value === "" || value == null) return 0;
+    const number = parseInt(value, 10);
+    return Number.isFinite(number) ? number : 0;
+  };
 
-      const bIn = document.createElement('input');
-      bIn.inputMode = "numeric";
-      bIn.placeholder = "B";
-      bIn.value = state[denom].b;
-      bIn.addEventListener('input', () => {
-        state[denom].b = sanitize(bIn.value);
-        if (bIn.value !== state[denom].b) bIn.value = state[denom].b;
-        update();
-      });
-
-      const eq = document.createElement('button');
-      eq.className = "eqbtn";
-      eq.type = "button";
-      eq.textContent = "=";
-      eq.title = "把 A 複製到 B";
-      eq.addEventListener('click', () => {
-        state[denom].b = state[denom].a || "";
-        bIn.value = state[denom].b;
-        bump("A→B");
-        update();
-      });
-
-      row.appendChild(denomEl);
-      row.appendChild(aIn);
-      row.appendChild(eq);
-      row.appendChild(bIn);
-
-      rowsEl.appendChild(row);
-    });
+  function bump(text) {
+    statusEl.textContent = text;
+    clearTimeout(bump.timer);
+    bump.timer = setTimeout(() => statusEl.textContent = "Ready", 1200);
   }
 
-  function sanitize(v) {
-    const s = (v ?? "").toString().replace(/[^\d]/g, "");
-    if (s.length > 1) return s.replace(/^0+/, "") || "0";
-    return s;
-  }
-
-  function getQty(denom, which) {
-    const v = state[denom][which];
-    if (v === "" || v == null) return 0;
-    const n = parseInt(v, 10);
-    return Number.isFinite(n) ? n : 0;
+  function fmtLine(denom, aQty, bQty, diffMoney) {
+    if (diffMoney === 0) return `$${denom} ${aQty}=${bQty}`;
+    return `$${denom} ${aQty}=${bQty} d${fmtMoney(diffMoney)}`;
   }
 
   function update() {
     let aTotal = 0;
     let bTotal = 0;
-
-    const lines = [];
-    lines.push("金額差異");
+    const lines = ["金額差異"];
 
     denoms.forEach(denom => {
-      const aQty = getQty(denom, "a");
-      const bQty = getQty(denom, "b");
+      const aQty = qty(denom, "a");
+      const bQty = qty(denom, "b");
       const aMoney = aQty * denom;
       const bMoney = bQty * denom;
-      const dMoney = bMoney - aMoney;
-
       aTotal += aMoney;
       bTotal += bMoney;
-
-      lines.push(fmtLine(denom, aQty, bQty, dMoney));
+      lines.push(fmtLine(denom, aQty, bQty, bMoney - aMoney));
     });
 
-    const dTotal = bTotal - aTotal;
     lines.push("");
     lines.push(`系統 ${fmtMoney(aTotal)}`);
     lines.push(`實際 ${fmtMoney(bTotal)}`);
-    lines.push(`差值 ${fmtMoney(dTotal)}`);
-
+    lines.push(`差值 ${fmtMoney(bTotal - aTotal)}`);
+    if (bTotal - aTotal === 0) lines.push("今日不用補錢");
     outEl.value = lines.join("\n");
   }
 
-  function bump(msg) {
-    statusEl.textContent = msg;
-    clearTimeout(bump._t);
-    bump._t = setTimeout(() => statusEl.textContent = "Ready", 900);
+  function buildRows() {
+    rowsEl.innerHTML = "";
+    denoms.forEach(denom => {
+      const row = document.createElement("div");
+      row.className = "row";
+
+      const denomEl = document.createElement("div");
+      denomEl.className = "denom";
+      denomEl.textContent = `$${denom}`;
+
+      const aIn = document.createElement("input");
+      aIn.inputMode = "numeric";
+      aIn.placeholder = "A";
+      aIn.value = state[denom].a;
+      aIn.addEventListener("input", () => {
+        state[denom].a = sanitize(aIn.value);
+        if (aIn.value !== state[denom].a) aIn.value = state[denom].a;
+        update();
+      });
+
+      const bIn = document.createElement("input");
+      bIn.inputMode = "numeric";
+      bIn.placeholder = "B";
+      bIn.value = state[denom].b;
+      bIn.addEventListener("input", () => {
+        state[denom].b = sanitize(bIn.value);
+        if (bIn.value !== state[denom].b) bIn.value = state[denom].b;
+        update();
+      });
+
+      const eq = document.createElement("button");
+      eq.className = "eqbtn";
+      eq.type = "button";
+      eq.textContent = "=";
+      eq.title = "把 A 複製到 B";
+      eq.addEventListener("click", () => {
+        state[denom].b = state[denom].a || "";
+        bIn.value = state[denom].b;
+        bump("A=B");
+        update();
+      });
+
+      row.append(denomEl, aIn, eq, bIn);
+      rowsEl.appendChild(row);
+    });
+  }
+
+  async function loadSystemCash() {
+    bump("Loading");
+    const response = await fetch(CASH_API_URL, { cache: "no-store" });
+    const payload = await response.json();
+    if (!payload.ok) throw new Error(payload.error || "系統資料讀取失敗");
+    denoms.forEach(denom => {
+      const row = payload.denominations && payload.denominations[String(denom)];
+      state[denom].a = row && row.quantity != null ? String(row.quantity) : "";
+    });
+    buildRows();
+    update();
+    const total = fmtMoney(payload.usable_total_amount);
+    const time = payload.generated_at ? new Date(payload.generated_at).toLocaleTimeString("zh-TW", { hour12: false }) : "-";
+    sourceInfoEl.textContent = `系統 ${total} / ${time}`;
+    bump("Updated");
   }
 
   async function copyOutput() {
-    const text = outEl.value || "";
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(outEl.value || "");
       bump("Copied");
-    } catch (e) {
+    } catch {
       outEl.focus();
       outEl.select();
       document.execCommand("copy");
@@ -352,23 +200,24 @@
     }
   }
 
-  function resetAll() {
-    denoms.forEach(d => {
-      if (DEFAULTS[d]) state[d] = { ...DEFAULTS[d] };
-      else state[d] = { a: "", b: "" };
-    });
+  function resetActual() {
+    denoms.forEach(d => state[d].b = "");
     buildRows();
     update();
     bump("Cleared");
   }
 
-  copyBtn.addEventListener('click', copyOutput);
-  resetBtn.addEventListener('click', resetAll);
+  copyBtn.addEventListener("click", copyOutput);
+  refreshBtn.addEventListener("click", () => loadSystemCash().catch(error => bump(error.message)));
+  resetBtn.addEventListener("click", resetActual);
 
   buildRows();
   update();
+  loadSystemCash().catch(error => {
+    sourceInfoEl.textContent = error.message;
+    bump("Offline");
+  });
 })();
 </script>
-
 </body>
 </html>
