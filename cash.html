@@ -9,11 +9,12 @@
   <style>
     :root {
       color-scheme: dark;
-      --bg: #010204;
-      --panel: rgba(5, 7, 12, 0.82);
-      --panel2: rgba(2, 3, 5, 0.92);
+      /* 稍微加深純黑底色，拉開明暗對比 */
+      --bg: #000205;
+      --panel: rgba(4, 8, 15, 0.85);
+      --panel2: rgba(1, 3, 7, 0.95);
       --text: #e5f7ff;
-      --muted: #435b6e;
+      --muted: #4e6b82;
       
       /* EVA 頂級霓虹發光色 */
       --neon-cyan: #00ffcc;
@@ -73,21 +74,55 @@
       pointer-events: none;
     }
 
-    /* 背景複雜細節層0：EVA 蜂巢式 A.T. Field 網格紋理 */
+    /* 【超級加強版】MAGI / 攻殼 HUD 機械裝甲發光結構層 */
     .hex-grid {
       position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: -30%; left: -30%; right: -30%; bottom: -30%;
       pointer-events: none;
-      opacity: 0.12;
-      background-size: 24px 42px;
-      background-image: 
-        linear-gradient(30deg, var(--neon-cyan) 25%, transparent 25%), 
-        linear-gradient(150deg, var(--neon-cyan) 25%, transparent 25%), 
-        linear-gradient(270deg, var(--neon-cyan) 25%, transparent 25%), 
-        linear-gradient(330deg, transparent 75%, var(--neon-cyan) 75%), 
-        linear-gradient(90deg, transparent 75%, var(--neon-cyan) 75%), 
-        linear-gradient(210deg, transparent 75%, var(--neon-cyan) 75%);
+      /* 提高總體透明度，並加上亮化濾鏡與強烈霓虹發光 */
+      opacity: 0.38;
       z-index: 1;
+      transform: rotate(-3deg);
+      animation: mechDrift 50s linear infinite;
+      filter: drop-shadow(0 0 2px rgba(0, 255, 204, 0.4)) drop-shadow(0 0 4px rgba(255, 0, 255, 0.2));
+
+      background-image:
+        /* 1. NERV 裝甲不規則網格切線 (提高對比) */
+        linear-gradient(115deg, rgba(0,255,204,0.3) 0 1px, transparent 1px),
+        linear-gradient(25deg, rgba(255,0,255,0.25) 0 1px, transparent 1px),
+        /* 2. 精密 HUD 定位十字與戰術刻度中軸線 */
+        linear-gradient(90deg, transparent 0 49.5%, rgba(0,255,204,0.4) 49.5% 50.5%, transparent 50.5% 100%),
+        linear-gradient(0deg, transparent 0 49.5%, rgba(0,255,204,0.4) 49.5% 50.5%, transparent 50.5% 100%),
+        /* 3. 戰術裝甲接縫厚重切割線 */
+        linear-gradient(155deg, transparent 0 62%, rgba(0,255,204,0.25) 62% 62.8%, transparent 62.8%),
+        linear-gradient(65deg, transparent 0 44%, rgba(255,255,255,0.15) 44% 44.6%, transparent 44.6%),
+        /* 4. 量子核心雷達點陣與主動掃描幾何圈 */
+        radial-gradient(circle at 30% 25%, rgba(0,255,204,0.4) 0 3px, transparent 4px),
+        radial-gradient(circle at 75% 70%, rgba(255,0,255,0.2) 0 60px, transparent 150px),
+        radial-gradient(ellipse at 50% 50%, rgba(0,255,204,0.15) 0 180px, transparent 320px);
+
+      background-size:
+        120px 120px,
+        160px 160px,
+        240px 240px,
+        240px 240px,
+        380px 280px,
+        450px 350px,
+        300px 300px,
+        600px 600px,
+        900px 700px;
+    }
+
+    /* 機械結構層漂移動畫速度微調，加速明暗交錯感 */
+    @keyframes mechDrift {
+      0% {
+        background-position:
+          0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px;
+      }
+      100% {
+        background-position:
+          120px 240px, -160px 160px, 240px -240px, -240px -480px, 380px 280px, -450px 350px, 300px -300px, -600px 600px, 900px 700px;
+      }
     }
 
     /* 背景複雜細節層1：玻璃反光條紋 */
@@ -137,7 +172,7 @@
     .tag-tr { top: 6px; right: 12px; color: var(--neon-cyan); text-shadow: 0 0 5px var(--neon-cyan); }
     .tag-bl { bottom: 6px; left: 12px; opacity: 0.6; color: var(--neon-magenta); }
 
-    /* UI 內容包裝層 (全面改成嚴格垂直佈局，防止擠壓) */
+    /* UI 內容包裝層 */
     .ui-content {
       position: relative;
       z-index: 10;
@@ -151,7 +186,7 @@
     .title {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 10px; border-bottom: 1px dashed rgba(0, 255, 204, 0.2); padding-bottom: 8px;
-      flex-shrink: 0; /* 絕不准縮小 */
+      flex-shrink: 0;
     }
     .title h1 { font-size: 16px; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 0 0 10px var(--neon-cyan); }
     .chip {
@@ -164,17 +199,17 @@
     .grid-container {
       display: flex;
       flex-direction: column;
-      flex-shrink: 0; /* 絕不准縮小 */
+      flex-shrink: 0;
       margin-bottom: 12px;
     }
     .grid { 
       display: flex; 
       flex-direction: column; 
       gap: 7px; 
-      max-height: 282px; /* 控制主要欄位高度上限，多出可滾動 */
+      max-height: 282px;
       overflow-y: auto; 
       padding-right: 2px;
-      padding-bottom: 10px; /* 防止最後一列框線與發光被 overflow 裁切 */
+      padding-bottom: 10px;
     }
     .hdr, .row { display: grid; grid-template-columns: 78px 1fr 38px 1fr; gap: 6px; align-items: center; }
     .hdr { padding: 4px 4px; color: var(--muted); font-size: 9px; font-weight: bold; letter-spacing: 0.5px; flex-shrink: 0; }
@@ -291,9 +326,9 @@
         <div class="grid-container">
           <div class="hdr">
             <div>面額構成</div>
-            <div style="text-align:center;">システムデータ</div>
+            <div style="text-align:center;">システム數據</div>
             <div style="text-align:center;">同步</div>
-            <div style="text-align:center;">実測データ</div>
+            <div style="text-align:center;">実測數據</div>
           </div>
           <div class="grid" id="rows"></div>
         </div>
