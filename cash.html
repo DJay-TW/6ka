@@ -686,7 +686,7 @@
   function update() {
     let aTotal = 0;
     let bTotal = 0;
-    const lines = ["金額差異", " "];
+    const lines = ["金額差異", ""];
 
     denoms.forEach(denom => {
       const aQty = qty(denom, "a");
@@ -705,7 +705,6 @@
 
     const cashboxSystem = Number(state.cashboxSystem || 0);
     const cashboxActual = Number(state.cashboxActual || 0);
-    lines.push("");
     lines.push(`系統錢箱 ${fmtMoney(cashboxSystem)}`);
     lines.push(`實際錢箱 ${fmtMoney(cashboxActual)}`);
     lines.push(`差值 ${fmtMoney(cashboxActual - cashboxSystem)}`);
