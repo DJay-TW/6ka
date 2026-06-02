@@ -275,12 +275,12 @@
       <div class="bracket b-bl"></div><div class="bracket b-br"></div>
       <div class="tick-h t-top"></div><div class="tick-h t-bottom"></div>
       <div class="hazard-edge"></div>
-      <div class="nerv-tag tag-tr">NERV_SYS // REV.06</div>
-      <div class="nerv-tag tag-bl">LOC_CORE_35.45_N</div>
+      <div class="nerv-tag tag-tr">MENYA_SYS // REV.6KA</div>
+      <div class="nerv-tag tag-bl">LOC_CORE_236.2_N</div>
 
       <canvas id="fxCanvas"></canvas>
 
-      <div id="alertOverlay"><div class="alert-banner">警 告 / PATTERN BLUE</div></div>
+      <div id="alertOverlay"><div class="alert-banner">警 告 / パターン・ブルー</div></div>
 
       <div class="ui-content">
         <div class="title">
@@ -312,7 +312,7 @@
         <div class="actions">
           <button class="btn" id="copyBtn">複製核心數據</button>
           <button class="btn" id="refreshBtn">同步系統</button>
-          <button class="btn" id="resetBtn">資料清空</button>
+          <button class="btn" id="resetBtn">データクリア</button>
         </div>
         
         <textarea id="out" readonly spellcheck="false"></textarea>
@@ -706,7 +706,6 @@
     const cashboxSystem = Number(state.cashboxSystem || 0);
     const cashboxActual = Number(state.cashboxActual || 0);
     lines.push("");
-    lines.push(` `);
     lines.push(`系統錢箱 ${fmtMoney(cashboxSystem)}`);
     lines.push(`實際錢箱 ${fmtMoney(cashboxActual)}`);
     lines.push(`差值 ${fmtMoney(cashboxActual - cashboxSystem)}`);
