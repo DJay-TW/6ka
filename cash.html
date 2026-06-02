@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>找零清點 - NERV 終極量子終端</title>
   <link rel="icon" type="image/png" href="cash-diff-icon.png" />
   <link rel="apple-touch-icon" href="cash-diff-icon.png" />
@@ -11,11 +11,11 @@
       color-scheme: dark;
       --bg: #010204;
       --panel: rgba(5, 7, 12, 0.82);
-      /* 修改為半透明底色，讓底層 Canvas 特效可以完美透上來 */
-      --panel2: rgba(2, 3, 5, 0.55); 
+      --panel2: rgba(2, 3, 5, 0.92);
       --text: #e5f7ff;
       --muted: #435b6e;
       
+      /* EVA 頂級霓虹發光色 */
       --neon-cyan: #00ffcc;
       --neon-magenta: #ff00ff;
       --neon-amber: #ff9900;
@@ -33,33 +33,30 @@
       color: var(--text);
       overflow: hidden;
       min-height: 100vh;
-      min-height: -webkit-fill-available;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 8px;
     }
 
-    /* 手機專用主容器 */
+    /* 滿版手機主容器 */
     .wrap {
       width: 100%;
-      max-width: 440px;
-      flex: 1;
+      max-width: 480px;
+      height: calc(100vh - 16px);
       display: flex;
-      flex-direction: column;
       position: relative;
     }
 
-    /* NERV 核心卡片 */
+    /* 完美鎖定特效在框內的 EVA 核心卡片 */
     .card {
       width: 100%;
-      flex: 1;
+      height: 100%;
       background: var(--panel);
       border: 2px solid transparent;
       border-image: linear-gradient(135deg, var(--neon-cyan) 30%, #005544, var(--neon-magenta) 70%) 1;
       position: relative;
-      padding: 14px 12px;
+      padding: 16px 14px;
       box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
@@ -68,83 +65,79 @@
       flex-direction: column;
     }
 
-    /* 🎨 特效 Canvas：留置於 UI 內容下方 (z-index: 1) 做為背景發光層 */
+    /* 內嵌高幀率特效 Canvas */
     #fxCanvas {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      z-index: 1;
+      z-index: 2;
       pointer-events: none;
-      -webkit-transform: translate3d(0,0,0);
-      transform: translate3d(0,0,0);
     }
 
-    /* 🚨 紅色核爆警報文字疊加層 */
-    #alertOverlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255, 0, 60, 0.22); 
-      z-index: 9999; 
-      pointer-events: none;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      opacity: 0; transition: opacity 0.1s ease;
-      -webkit-transform: translate3d(0,0,0);
-      transform: translate3d(0,0,0);
-    }
-    .alert-banner {
-      background: var(--neon-red); color: #fff; font-size: 18px; font-weight: 900;
-      padding: 8px 24px; letter-spacing: 3px; text-shadow: 0 0 8px #000;
-      box-shadow: 0 0 25px var(--neon-red); transform: skewX(-12deg);
-      animation: blink 0.25s infinite alternate;
-    }
-    @keyframes blink { 0% { opacity: 0.2; } 100% { opacity: 1; } }
-
-    /* 背景細節層 */
+    /* 背景複雜細節層0：EVA 蜂巢式 A.T. Field 網格紋理 */
     .hex-grid {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       pointer-events: none;
-      opacity: 0.1;
-      background: repeating-linear-gradient(30deg, var(--neon-cyan) 0 1px, transparent 1px 24px);
-      z-index: 0;
+      opacity: 0.12;
+      background-size: 24px 42px;
+      background-image: 
+        linear-gradient(30deg, var(--neon-cyan) 25%, transparent 25%), 
+        linear-gradient(150deg, var(--neon-cyan) 25%, transparent 25%), 
+        linear-gradient(270deg, var(--neon-cyan) 25%, transparent 25%), 
+        linear-gradient(330deg, transparent 75%, var(--neon-cyan) 75%), 
+        linear-gradient(90deg, transparent 75%, var(--neon-cyan) 75%), 
+        linear-gradient(210deg, transparent 75%, var(--neon-cyan) 75%);
+      z-index: 1;
     }
 
+    /* 背景複雜細節層1：玻璃反光條紋 */
     .glass-layer {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       pointer-events: none;
-      background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 25%, rgba(255,255,255,0.02) 26%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.03) 61%);
+      background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 25%, rgba(255,255,255,0.03) 26%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.04) 61%);
       background-size: 300% 300%;
       animation: glare 12s linear infinite;
-      z-index: 0;
+      z-index: 3;
     }
-    @keyframes glare { 0% { background-position: 0% 0%; } 100% { background-position: 300% 300%; } }
+    @keyframes glare {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 300% 300%; }
+    }
 
+    /* 背景複雜細節層2：CRT 電子束橫向噪點線 */
     .noise-layer {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       pointer-events: none;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
       background-size: 100% 4px;
-      z-index: 0;
+      z-index: 4;
+      opacity: 0.8;
     }
 
     /* EVA 四角 L-Brackets */
-    .bracket { position: absolute; width: 20px; height: 20px; pointer-events: none; z-index: 25; }
-    .b-tl { top: -2px; left: -2px; border-top: 5px solid var(--neon-cyan); border-left: 5px solid var(--neon-cyan); }
-    .b-tr { top: -2px; right: -2px; border-top: 5px solid var(--neon-cyan); border-right: 5px solid var(--neon-cyan); }
-    .b-bl { bottom: -2px; left: -2px; border-bottom: 5px solid var(--neon-magenta); border-left: 5px solid var(--neon-magenta); }
-    .b-br { bottom: -2px; right: -2px; border-bottom: 5px solid var(--neon-magenta); border-right: 5px solid var(--neon-magenta); }
+    .bracket { position: absolute; width: 28px; height: 28px; pointer-events: none; z-index: 25; }
+    .b-tl { top: -2px; left: -2px; border-top: 6px solid var(--neon-cyan); border-left: 6px solid var(--neon-cyan); filter: drop-shadow(0 0 10px var(--neon-cyan)); }
+    .b-tr { top: -2px; right: -2px; border-top: 6px solid var(--neon-cyan); border-right: 6px solid var(--neon-cyan); filter: drop-shadow(0 0 10px var(--neon-cyan)); }
+    .b-bl { bottom: -2px; left: -2px; border-bottom: 6px solid var(--neon-magenta); border-left: 6px solid var(--neon-magenta); filter: drop-shadow(0 0 10px var(--neon-magenta)); }
+    .b-br { bottom: -2px; right: -2px; border-bottom: 6px solid var(--neon-magenta); border-right: 6px solid var(--neon-magenta); filter: drop-shadow(0 0 10px var(--neon-magenta)); }
 
+    /* 邊界中點刻度與警告黑黃條紋裝飾 */
     .hazard-edge {
-      position: absolute; top: 0; right: 25px; width: 60px; height: 3px;
+      position: absolute; top: 0; right: 25px; width: 80px; height: 3px;
       background: repeating-linear-gradient(-45deg, #000, #000 4px, var(--neon-amber) 4px, var(--neon-amber) 8px);
-      z-index: 20; opacity: 0.5;
+      z-index: 20; opacity: 0.6;
     }
+    .tick-h { position: absolute; left: 50%; width: 40px; height: 2px; background: rgba(0, 255, 204, 0.5); transform: translateX(-50%); z-index: 20; }
+    .t-top { top: -1px; } .t-bottom { bottom: -1px; }
 
+    /* NERV 專用系統辨識碼標籤 */
     .nerv-tag { font-size: 8px; color: var(--muted); letter-spacing: 0.5px; position: absolute; font-weight: bold; z-index: 20; }
-    .tag-tr { top: 4px; right: 12px; color: var(--neon-cyan); }
-    .tag-bl { bottom: 4px; left: 12px; opacity: 0.5; color: var(--neon-magenta); }
+    .tag-tr { top: 6px; right: 12px; color: var(--neon-cyan); text-shadow: 0 0 5px var(--neon-cyan); }
+    .tag-bl { bottom: 6px; left: 12px; opacity: 0.6; color: var(--neon-magenta); }
 
-    /* 📱 UI 內容包裝層 - z-index 提高，內部元件自帶層級以接受透光 */
+    /* UI 內容包裝層 (全面改成嚴格垂直佈局，防止擠壓) */
     .ui-content {
       position: relative;
       z-index: 10;
@@ -157,114 +150,108 @@
     /* 標題與晶片狀態 */
     .title {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 8px; border-bottom: 1px dashed rgba(0, 255, 204, 0.2); padding-bottom: 6px;
-      flex-shrink: 0;
+      margin-bottom: 10px; border-bottom: 1px dashed rgba(0, 255, 204, 0.2); padding-bottom: 8px;
+      flex-shrink: 0; /* 絕不准縮小 */
     }
-    .title h1 { font-size: 15px; font-weight: 900; letter-spacing: 0.5px; color: #fff; text-shadow: 0 0 10px var(--neon-cyan); }
+    .title h1 { font-size: 16px; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 0 0 10px var(--neon-cyan); }
     .chip {
-      font-size: 9px; font-weight: bold; padding: 1px 8px;
+      font-size: 10px; font-weight: bold; padding: 2px 10px;
       border: 1px solid var(--neon-cyan); color: var(--neon-cyan);
       background: rgba(0, 255, 204, 0.1); box-shadow: var(--glow-cyan);
     }
 
-    /* 彈性欄位容器 */
+    /* 欄位網格標頭與內容容器 */
     .grid-container {
       display: flex;
       flex-direction: column;
-      flex: 1; 
-      min-height: 160px; 
+      flex-shrink: 0; /* 絕不准縮小 */
       margin-bottom: 6px;
-      overflow: hidden;
     }
     .grid { 
       display: flex; 
       flex-direction: column; 
-      gap: 5px; 
+      gap: 6px; 
+      max-height: 270px; /* 控制主要欄位高度上限，多出可滾動 */
       overflow-y: auto; 
       padding-right: 2px;
-      flex: 1;
-      -webkit-overflow-scrolling: touch; 
     }
-    .hdr, .row { display: grid; grid-template-columns: 72px 1fr 34px 1fr; gap: 5px; align-items: center; }
-    .hdr { padding: 2px 4px; color: var(--muted); font-size: 9px; font-weight: bold; flex-shrink: 0; text-align: center;}
-    .hdr div:first-child { text-align: left; }
+    .hdr, .row { display: grid; grid-template-columns: 78px 1fr 38px 1fr; gap: 6px; align-items: center; }
+    .hdr { padding: 4px 4px; color: var(--muted); font-size: 9px; font-weight: bold; letter-spacing: 0.5px; flex-shrink: 0; }
 
-    /* 面額文字欄位 */
+    /* 日文面額區塊與左側色條 */
     .denom-block {
       display: flex; flex-direction: column; justify-content: center;
-      border-left: 3px solid var(--neon-magenta); padding-left: 5px;
-      height: 36px;
-      position: relative; z-index: 2;
+      border-left: 3px solid var(--neon-magenta); padding-left: 6px;
+      height: 38px;
     }
-    .denom-kanji { font-size: 13px; font-weight: 900; color: #fff; line-height: 1.1; }
-    .denom-kana { font-size: 8px; color: var(--neon-cyan); opacity: 0.7; margin-top: 1px; }
+    .denom-kanji { font-size: 14px; font-weight: 900; color: #fff; text-shadow: 0 0 4px rgba(255,255,255,0.3); line-height: 1.1; }
+    .denom-kana { font-size: 8px; color: var(--neon-cyan); opacity: 0.7; letter-spacing: 0px; margin-top: 1px; }
 
-    /* 🔥【關鍵修正】半透明輸入框 + 後端融合模式，讓底部的光線可以穿透出來 */
     input {
-      width: 100%; font-size: 16px; font-weight: bold; padding: 7px 2px;
-      border: 1px solid rgba(255,255,255,0.08); 
-      background: var(--panel2); /* 半透明背景 */
-      color: #fff;
-      outline: none; transition: all 0.15s ease; text-align: center; font-family: inherit;
-      border-radius: 0; 
-      -webkit-appearance: none;
-      position: relative; 
-      z-index: 2; 
-      backdrop-filter: blur(2px); /* 讓穿透的光線帶有微微的科幻毛玻璃折射感 */
-      -webkit-backdrop-filter: blur(2px);
+      width: 100%; font-size: 18px; font-weight: bold; padding: 8px 2px;
+      border: 1px solid rgba(255,255,255,0.05); background: var(--panel2); color: #fff;
+      outline: none; transition: all 0.2s ease; text-align: center; font-family: inherit;
     }
-    /* 聚焦時提升亮度與層級 */
-    input:focus { border-color: var(--neon-cyan); box-shadow: var(--glow-cyan); background: rgba(4, 10, 14, 0.75); z-index: 3; }
+    input:focus {
+      border-color: var(--neon-cyan); box-shadow: var(--glow-cyan); background: #040a0e;
+    }
 
-    /* ➔ 同步按鈕也改為半透明背景，接受橫向切裂光的微光透射 */
     .eqbtn {
-      width: 100%; height: 36px; border: 1px solid var(--neon-magenta);
-      background: rgba(255, 0, 255, 0.08); color: var(--neon-magenta);
-      font-size: 14px; font-weight: 900; cursor: pointer;
+      width: 100%; height: 38px; border: 1px solid var(--neon-magenta);
+      background: rgba(255, 0, 255, 0.04); color: var(--neon-magenta);
+      font-size: 16px; font-weight: 900; cursor: pointer;
       display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;
-      position: relative; z-index: 2;
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
     }
-    .eqbtn:hover, .eqbtn:active { background: var(--neon-magenta); color: #000; box-shadow: var(--glow-magenta); }
+    .eqbtn:hover { background: var(--neon-magenta); color: #000; box-shadow: var(--glow-magenta); }
 
-    /* 錢箱區塊 */
-    .cashbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 2px; flex-shrink: 0; }
+    .cashbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; flex-shrink: 0; }
     .cashbox-field label { display: block; color: var(--muted); font-size: 9px; font-weight: bold; margin-bottom: 2px; }
 
-    /* 功能按鈕 */
-    .actions { display: flex; gap: 5px; margin-top: 6px; flex-shrink: 0; }
+    /* 三個主要功能按鈕 */
+    .actions { display: flex; gap: 6px; margin-top: 8px; flex-shrink: 0; }
     .btn {
-      flex: 1; font-size: 11px; font-weight: 900; padding: 10px 2px; cursor: pointer;
+      flex: 1; font-size: 11.5px; font-weight: 900; padding: 12px 2px; cursor: pointer;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(255,255,255,0.01);
       transition: all 0.15s ease; font-family: inherit;
-      border-radius: 0;
-      position: relative; z-index: 2;
     }
     
-    #copyBtn { border: 1px solid var(--neon-cyan); color: var(--neon-cyan); }
-    #copyBtn:hover, #copyBtn:active { background: var(--neon-cyan); color: #000; box-shadow: var(--glow-cyan); }
+    #copyBtn { border: 1px solid var(--neon-cyan); color: var(--neon-cyan); text-shadow: 0 0 4px rgba(0,255,204,0.3); }
+    #copyBtn:hover { background: var(--neon-cyan); color: #000; box-shadow: var(--glow-cyan); }
 
-    #refreshBtn { border: 1px solid var(--neon-amber); color: var(--neon-amber); }
-    #refreshBtn:hover, #refreshBtn:active { background: var(--neon-amber); color: #000; box-shadow: 0 0 12px var(--neon-amber); }
+    #refreshBtn { border: 1px solid var(--neon-amber); color: var(--neon-amber); text-shadow: 0 0 4px rgba(255,170,0,0.3); }
+    #refreshBtn:hover { background: var(--neon-amber); color: #000; box-shadow: 0 0 12px var(--neon-amber); }
 
-    #resetBtn { border: 1px solid var(--neon-red); color: var(--neon-red); }
-    #resetBtn:hover, #resetBtn:active { background: var(--neon-red); color: #fff; box-shadow: 0 0 12px var(--neon-red); }
+    #resetBtn { border: 1px solid var(--neon-red); color: var(--neon-red); text-shadow: 0 0 4px rgba(255,0,60,0.3); }
+    #resetBtn:hover { background: var(--neon-red); color: #fff; box-shadow: 0 0 12px var(--neon-red); }
 
-    /* 報告輸出區 */
+    /* 讓數據分析報告在剩下空間中自由延伸 */
     textarea {
-      width: 100%; margin-top: 6px; 
-      flex: 1; min-height: 75px; resize: none;
-      font-size: 10.5px; letter-spacing: 0.3px; line-height: 1.35; padding: 8px;
-      border: 1px solid rgba(0, 255, 204, 0.1); background: rgba(1, 3, 5, 0.85); color: var(--neon-cyan);
+      width: 100%; margin-top: 8px; flex-grow: 1; min-height: 80px; resize: none;
+      font-size: 11px; letter-spacing: 0.3px; line-height: 1.4; padding: 10px;
+      border: 1px solid rgba(0, 255, 204, 0.1); background: #010305; color: var(--neon-cyan);
       box-shadow: inset 0 0 12px rgba(0,0,0,0.95); outline: none; font-family: inherit;
-      white-space: pre; overflow-x: auto; border-radius: 0;
-      position: relative; z-index: 2;
+      white-space: pre; overflow-x: auto;
     }
 
-    .small { margin-top: 4px; color: var(--muted); font-size: 8.5px; display: flex; justify-content: space-between; gap: 6px; flex-shrink: 0; }
+    .small { margin-top: 6px; color: var(--muted); font-size: 9px; display: flex; justify-content: space-between; gap: 6px; flex-shrink: 0; }
     #sourceInfo { color: var(--neon-magenta); font-weight: bold; }
 
+    /* 內嵌紅色核爆警報文字疊加層 */
+    #alertOverlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255, 0, 60, 0.18); z-index: 5; pointer-events: none;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.1s ease;
+    }
+    .alert-banner {
+      background: var(--neon-red); color: #fff; font-size: 20px; font-weight: 900;
+      padding: 10px 30px; letter-spacing: 4px; text-shadow: 0 0 8px #000;
+      box-shadow: 0 0 25px var(--neon-red); transform: skewX(-12deg);
+      animation: blink 0.25s infinite alternate;
+    }
+    @keyframes blink { 0% { opacity: 0.2; } 100% { opacity: 1; } }
+
+    /* 卡片高頻率震動特效 */
     .shake { animation: cardShake 0.06s linear infinite; }
     @keyframes cardShake {
       0% { transform: translate(3px, 2px) rotate(0deg); }
@@ -285,9 +272,14 @@
       <div class="noise-layer"></div>
       <div class="bracket b-tl"></div><div class="bracket b-tr"></div>
       <div class="bracket b-bl"></div><div class="bracket b-br"></div>
+      <div class="tick-h t-top"></div><div class="tick-h t-bottom"></div>
       <div class="hazard-edge"></div>
       <div class="nerv-tag tag-tr">NERV_SYS // REV.06</div>
       <div class="nerv-tag tag-bl">LOC_CORE_35.45_N</div>
+
+      <canvas id="fxCanvas"></canvas>
+
+      <div id="alertOverlay"><div class="alert-banner">警 告 / PATTERN BLUE</div></div>
 
       <div class="ui-content">
         <div class="title">
@@ -298,20 +290,20 @@
         <div class="grid-container">
           <div class="hdr">
             <div>面額構成</div>
-            <div>A(系統)</div>
-            <div>同步</div>
-            <div>B(實際)</div>
+            <div style="text-align:center;">A(系統)</div>
+            <div style="text-align:center;">同步</div>
+            <div style="text-align:center;">B(實際)</div>
           </div>
           <div class="grid" id="rows"></div>
         </div>
         
         <div class="cashbox-grid">
           <div class="cashbox-field">
-            <label for="cashboxSystem">▶ SYSTEM_CBOX_A</label>
+            <label for="cashboxSystem">▶ SYSTEM_CASHBOX_A</label>
             <input id="cashboxSystem" inputmode="numeric" readonly placeholder="LOCKED" />
           </div>
           <div class="cashbox-field">
-            <label for="cashboxActual">▶ ACTUAL_CBOX_B</label>
+            <label for="cashboxActual">▶ ACTUAL_CASHBOX_B</label>
             <input id="cashboxActual" inputmode="numeric" placeholder="INPUT" />
           </div>
         </div>
@@ -329,10 +321,6 @@
           <span id="sourceInfo">尚未同步量子數據</span>
         </div>
       </div>
-
-      <canvas id="fxCanvas"></canvas>
-      <div id="alertOverlay"><div class="alert-banner">警 告 / PATTERN BLUE</div></div>
-
     </div>
   </div>
 
@@ -367,65 +355,70 @@
   state.cashboxSystem = "";
   state.cashboxActual = "";
 
+  // ----------------------------------------------------
+  // 🎵 Web Audio API 音效
+  // ----------------------------------------------------
   let audioCtx = null;
   function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
 
   function playTone(freq, type, duration, startTime = 0) {
-    try {
-      initAudio();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
-      gain.gain.setValueAtTime(0.12, audioCtx.currentTime + startTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + startTime + duration);
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(audioCtx.currentTime + startTime); osc.stop(audioCtx.currentTime + startTime + duration);
-    } catch(e) {}
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
+    gain.gain.setValueAtTime(0.12, audioCtx.currentTime + startTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + startTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + startTime);
+    osc.stop(audioCtx.currentTime + startTime + duration);
   }
 
-  function playInputFeedbackSound() { playTone(880, 'sine', 0.03, 0); }
   function playCopySound() {
     playTone(523.25, 'sine', 0.15, 0);
     playTone(659.25, 'sine', 0.15, 0.08);
     playTone(783.99, 'sine', 0.25, 0.16);
   }
+
   function playSyncSound() {
-    playTone(440, 'sine', 0.12, 0); playTone(554.37, 'sine', 0.12, 0.06);
-    playTone(659.25, 'sine', 0.12, 0.12); playTone(880, 'sine', 0.3, 0.18);
+    playTone(440, 'sine', 0.12, 0);
+    playTone(554.37, 'sine', 0.12, 0.06);
+    playTone(659.25, 'sine', 0.12, 0.12);
+    playTone(880, 'sine', 0.3, 0.18);
   }
 
   function playExplosionSound() {
-    try {
-      initAudio();
-      const now = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(320, now);
-      osc.frequency.linearRampToValueAtTime(30, now + 1.8);
-      gainNode.gain.setValueAtTime(0.25, now);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
-      osc.connect(gainNode); gainNode.connect(audioCtx.destination);
-      osc.start(now); osc.stop(now + 1.8);
+    initAudio();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.linearRampToValueAtTime(30, now + 1.8);
+    gainNode.gain.setValueAtTime(0.25, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+    osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 1.8);
 
-      const bufferSize = audioCtx.sampleRate * 2.0;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = buffer;
-      const noiseGain = audioCtx.createGain();
-      noiseGain.gain.setValueAtTime(0.3, now);
-      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
-      noise.connect(noiseGain); noiseGain.connect(audioCtx.destination);
-      noise.start(now); noise.stop(now + 2.0);
-    } catch(e) {}
+    const bufferSize = audioCtx.sampleRate * 2.0;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.3, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+    noise.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+    noise.start(now); noise.stop(now + 2.0);
   }
 
-  // 🎨 Canvas 特效引擎
+  // ----------------------------------------------------
+  // 🎨 HTML5 Canvas 浮誇光污染渲染引擎
+  // ----------------------------------------------------
   const canvas = document.getElementById("fxCanvas");
   const ctx = canvas.getContext("2d");
   
@@ -440,7 +433,8 @@
 
   function resizeCanvas() {
     const rect = cardEl.getBoundingClientRect();
-    canvas.width = rect.width; canvas.height = rect.height;
+    canvas.width = rect.width;
+    canvas.height = rect.height;
   }
   const resizeObserver = new ResizeObserver(() => resizeCanvas());
   resizeObserver.observe(cardEl);
@@ -450,52 +444,60 @@
     pillars = [];
     const positions = [canvas.width * 0.2, canvas.width * 0.5, canvas.width * 0.8];
     positions.forEach(x => {
-      pillars.push({ x: x, width: Math.random() * 30 + 25, alpha: 1.0, decay: 0.02 });
+      pillars.push({ x: x, width: Math.random() * 40 + 35, alpha: 1.0, decay: 0.015 });
     });
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 60; i++) {
       particles.push({
         x: canvas.width * 0.5 + (Math.random() - 0.5) * canvas.width,
         y: canvas.height,
-        vx: (Math.random() - 0.5) * 5, vy: -(Math.random() * 6 + 3),
-        size: Math.random() * 5 + 2, color: "#00ffcc", life: 1.0, decay: Math.random() * 0.02 + 0.01
+        vx: (Math.random() - 0.5) * 6,
+        vy: -(Math.random() * 7 + 4),
+        size: Math.random() * 6 + 3,
+        color: "#00ffcc",
+        life: 1.0,
+        decay: Math.random() * 0.015 + 0.01
       });
     }
   }
 
   function triggerAmberRings() {
-    showAmberUI = true; amberTimer = 120;
-    rings.push({ x: canvas.width / 2, y: canvas.height / 2, r: 10, maxR: canvas.width * 0.9, alpha: 1, decay: 0.015 });
+    showAmberUI = true;
+    amberTimer = 150;
+    rings.push({ x: canvas.width / 2, y: canvas.height / 2, r: 10, maxR: canvas.width * 0.9, alpha: 1, decay: 0.01 });
+    rings.push({ x: canvas.width / 2, y: canvas.height / 2, r: 60, maxR: canvas.width * 1.2, alpha: 1, decay: 0.008 });
   }
 
-  // 點擊「資料清空」時，動態將 Canvas 升到最頂層 (99999) 實現全覆蓋摧毀，隨後降回 (1)
   function triggerPatternBlueExplosion() {
-    canvas.style.zIndex = "99999"; 
     alertOverlay.style.opacity = "1";
     cardEl.classList.add("shake");
     
     setTimeout(() => {
       alertOverlay.style.opacity = "0";
       cardEl.classList.remove("shake");
-      canvas.style.zIndex = "1"; 
-    }, 2000);
+    }, 2200);
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
       setTimeout(() => {
         const exX = Math.random() * canvas.width;
         const exY = Math.random() * canvas.height;
         explosions.push({
-          x: exX, y: exY, r: 0, maxR: canvas.width * 1.5,
-          color: i % 2 === 0 ? "rgba(255, 0, 60, 0.85)" : "rgba(255, 255, 255, 0.9)"
+          x: exX, y: exY, r: 0,
+          maxR: canvas.width * 1.5,
+          color: i % 2 === 0 ? "rgba(255, 0, 60, 0.9)" : "rgba(255, 255, 255, 0.85)"
         });
 
-        for (let j = 0; j < 10; j++) {
+        for (let j = 0; j < 15; j++) {
           particles.push({
             x: exX, y: exY,
-            vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
-            size: Math.random() * 6 + 3, color: "#ff003c", life: 1.0, decay: 0.015
+            vx: (Math.random() - 0.5) * 12,
+            vy: (Math.random() - 0.5) * 12,
+            size: Math.random() * 8 + 4,
+            color: "#ff003c",
+            life: 1.0,
+            decay: 0.012
           });
         }
-      }, i * 200);
+      }, i * 180);
     }
   }
 
@@ -504,7 +506,19 @@
     const targetRect = e.target.getBoundingClientRect();
     const clickX = targetRect.left - rect.left + targetRect.width / 2;
     const clickY = targetRect.top - rect.top + targetRect.height / 2;
-    rings.push({ x: clickX, y: clickY, r: 5, maxR: canvas.width * 1.2, alpha: 1.0, decay: 0.03 });
+
+    rings.push({ x: clickX, y: clickY, r: 5, maxR: canvas.width * 1.3, alpha: 1.0, decay: 0.025 });
+
+    for (let i = 0; i < 25; i++) {
+      particles.push({
+        x: clickX, y: clickY,
+        vx: (Math.random() - 0.5) * 8,
+        vy: (Math.random() - 0.5) * 8,
+        size: Math.random() * 4 + 2,
+        color: "#00ffcc",
+        life: 1.0, decay: 0.03
+      });
+    }
   }
 
   function triggerRowSyncCut(e) {
@@ -513,35 +527,55 @@
     const targetY = targetRect.top - rect.top + targetRect.height / 2;
 
     pillars.push({
-      x: canvas.width / 2, width: 22, alpha: 1.4, decay: 0.04,
-      isRowCut: true, yPosition: targetY
+      x: canvas.width / 2,
+      width: canvas.height * 0.06,
+      alpha: 1.3,
+      decay: 0.035,
+      isRowCut: true,
+      yPosition: targetY
     });
+
+    for (let i = 0; i < 35; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: targetY,
+        vx: (Math.random() - 0.5) * 15,
+        vy: (Math.random() - 0.5) * 2,
+        size: Math.random() * 5 + 2,
+        color: "#ff00ff",
+        life: 1.0, decay: 0.02
+      });
+    }
   }
 
   function renderLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.globalCompositeOperation = "lighter";
 
-    scanY += 2; if (scanY > canvas.height) scanY = 0;
-    ctx.strokeStyle = "rgba(0, 255, 204, 0.06)";
+    scanY += 2;
+    if (scanY > canvas.height) scanY = 0;
+    ctx.strokeStyle = "rgba(0, 255, 204, 0.08)";
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(0, scanY); ctx.lineTo(canvas.width, scanY); ctx.stroke();
 
     pillars.forEach((p, idx) => {
       p.alpha -= p.decay;
-      if (p.alpha <= 0) { pillars.splice(idx, 1); return; }
+      if (p.alpha <= 0) {
+        pillars.splice(idx, 1);
+        return;
+      }
 
       if (p.isRowCut) {
         let grad = ctx.createLinearGradient(0, p.yPosition, canvas.width, p.yPosition);
         grad.addColorStop(0, "rgba(255, 0, 255, 0)");
-        grad.addColorStop(0.5, `rgba(255, 255, 255, ${p.alpha * 0.95})`);
+        grad.addColorStop(0.5, `rgba(255, 255, 255, ${p.alpha})`);
         grad.addColorStop(1, "rgba(255, 0, 255, 0)");
         ctx.fillStyle = grad;
         ctx.fillRect(0, p.yPosition - p.width/2, canvas.width, p.width);
       } else {
         let grad = ctx.createLinearGradient(p.x, canvas.height, p.x, 0);
-        grad.addColorStop(0, `rgba(0, 255, 204, ${p.alpha * 0.7})`);
-        grad.addColorStop(0.4, `rgba(255, 255, 255, ${p.alpha * 0.8})`);
+        grad.addColorStop(0, `rgba(0, 255, 204, ${p.alpha * 0.85})`);
+        grad.addColorStop(0.4, `rgba(255, 255, 255, ${p.alpha * 0.95})`);
         grad.addColorStop(1, "rgba(0, 255, 204, 0)");
         ctx.fillStyle = grad;
         ctx.fillRect(p.x - p.width/2, 0, p.width, canvas.height);
@@ -549,34 +583,66 @@
     });
 
     if (showAmberUI) {
-      amberAngle += 0.025; amberTimer--;
+      amberAngle += 0.025;
+      amberTimer--;
       if (amberTimer <= 0) showAmberUI = false;
-      ctx.save(); ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.strokeStyle = "rgba(255, 153, 0, 0.35)"; ctx.lineWidth = 3; ctx.setLineDash([20, 20]);
-      ctx.beginPath(); ctx.arc(0, 0, canvas.width * 0.4, amberAngle, amberAngle + Math.PI * 2); ctx.stroke();
+
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.strokeStyle = "rgba(255, 153, 0, 0.45)";
+      ctx.lineWidth = 4;
+      ctx.setLineDash([30, 20, 10, 20]);
+      ctx.beginPath(); ctx.arc(0, 0, canvas.width * 0.45, amberAngle, amberAngle + Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = "rgba(255, 215, 0, 0.35)";
+      ctx.setLineDash([40, 15]);
+      ctx.beginPath(); ctx.arc(0, 0, canvas.width * 0.35, -amberAngle * 1.8, -amberAngle * 1.8 + Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "rgba(255, 153, 0, 0.75)";
+      ctx.font = "900 11px monospace";
+      for (let i = 0; i < 5; i++) {
+        let code = (Math.random() * 99999).toFixed(0);
+        ctx.fillText(`SEQ_DATA_0${i} // ${code}`, -90, -120 + i * 18);
+      }
       ctx.restore();
     }
 
     rings.forEach((r, idx) => {
-      r.r += (r.maxR - r.r) * 0.06; r.alpha -= r.decay;
-      if (r.alpha <= 0) { rings.splice(idx, 1); return; }
-      ctx.strokeStyle = `rgba(0, 255, 204, ${r.alpha})`; ctx.lineWidth = 4;
+      r.r += (r.maxR - r.r) * 0.05;
+      r.alpha -= r.decay;
+      if (r.alpha <= 0) {
+        rings.splice(idx, 1);
+        return;
+      }
+      ctx.strokeStyle = `rgba(0, 255, 204, ${r.alpha})`;
+      ctx.lineWidth = 5;
       ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.stroke();
     });
 
     explosions.forEach((ex, idx) => {
-      ex.r += (ex.maxR - ex.r) * 0.08;
-      if (ex.r >= ex.maxR - 5) { explosions.splice(idx, 1); return; }
+      ex.r += (ex.maxR - ex.r) * 0.07;
+      if (ex.r >= ex.maxR - 6) {
+        explosions.splice(idx, 1);
+        return;
+      }
       let pct = ex.r / ex.maxR;
-      ctx.strokeStyle = ex.color; ctx.lineWidth = 8 * (1 - pct);
+      ctx.strokeStyle = ex.color;
+      ctx.lineWidth = 12 * (1 - pct);
       ctx.beginPath(); ctx.arc(ex.x, ex.y, ex.r, 0, Math.PI * 2); ctx.stroke();
     });
 
     particles.forEach((p, idx) => {
-      p.x += p.vx; p.y += p.vy; p.life -= p.decay;
-      if (p.life <= 0) { particles.splice(idx, 1); return; }
-      ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+      p.x += p.vx; p.y += p.vy;
+      p.life -= p.decay;
+      if (p.life <= 0) {
+        particles.splice(idx, 1);
+        return;
+      }
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.life;
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = p.color;
       ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
       ctx.globalAlpha = 1.0;
     });
 
@@ -585,7 +651,9 @@
   }
   requestAnimationFrame(renderLoop);
 
+  // ----------------------------------------------------
   // ⚙️ 業務邏輯
+  // ----------------------------------------------------
   const fmtMoney = n => {
     const value = Math.round(Number(n || 0));
     const sign = value < 0 ? "-" : "";
@@ -615,13 +683,17 @@
   }
 
   function update() {
-    let aTotal = 0; let bTotal = 0;
+    let aTotal = 0;
+    let bTotal = 0;
     const lines = ["【 金額差異動態分析報表 】", "==========================="];
 
     denoms.forEach(denom => {
-      const aQty = qty(denom, "a"); const bQty = qty(denom, "b");
-      const aMoney = aQty * denom; const bMoney = bQty * denom;
-      aTotal += aMoney; bTotal += bMoney;
+      const aQty = qty(denom, "a");
+      const bQty = qty(denom, "b");
+      const aMoney = aQty * denom;
+      const bMoney = bQty * denom;
+      aTotal += aMoney;
+      bTotal += bMoney;
       lines.push(fmtLine(denom, aQty, bQty, bMoney - aMoney));
     });
 
@@ -632,7 +704,8 @@
 
     const cashboxSystem = Number(state.cashboxSystem || 0);
     const cashboxActual = Number(state.cashboxActual || 0);
-    lines.push(""); lines.push(`---------------------------`);
+    lines.push("");
+    lines.push(`---------------------------`);
     lines.push(`系統錢箱 // ${fmtMoney(cashboxSystem)}`);
     lines.push(`實際錢箱 // ${fmtMoney(cashboxActual)}`);
     lines.push(`錢箱差值 // ${fmtMoney(cashboxActual - cashboxSystem)}`);
@@ -643,41 +716,59 @@
     rowsEl.innerHTML = "";
     denomConfigs.forEach(cfg => {
       const denom = cfg.value;
-      const row = document.createElement("div"); row.className = "row";
+      const row = document.createElement("div");
+      row.className = "row";
 
-      const denomBlock = document.createElement("div"); denomBlock.className = "denom-block";
-      const kanjiEl = document.createElement("div"); kanjiEl.className = "denom-kanji"; kanjiEl.textContent = cfg.kanji;
-      const kanaEl = document.createElement("div"); kanaEl.className = "denom-kana"; kanaEl.textContent = cfg.kana;
+      const denomBlock = document.createElement("div");
+      denomBlock.className = "denom-block";
+      
+      const kanjiEl = document.createElement("div");
+      kanjiEl.className = "denom-kanji";
+      kanjiEl.textContent = cfg.kanji;
+      
+      const kanaEl = document.createElement("div");
+      kanaEl.className = "denom-kana";
+      kanaEl.textContent = cfg.kana;
+      
       denomBlock.append(kanjiEl, kanaEl);
 
-      const aIn = document.createElement("input"); aIn.inputMode = "numeric"; aIn.placeholder = "0"; aIn.value = state[denom].a;
+      const aIn = document.createElement("input");
+      aIn.inputMode = "numeric";
+      aIn.placeholder = "0";
+      aIn.value = state[denom].a;
       aIn.addEventListener("focus", (e) => triggerFocusPulse(e));
       aIn.addEventListener("input", () => {
-        playInputFeedbackSound();
         state[denom].a = sanitize(aIn.value);
         if (aIn.value !== state[denom].a) aIn.value = state[denom].a;
         update();
       });
 
-      const bIn = document.createElement("input"); bIn.inputMode = "numeric"; bIn.placeholder = "0"; bIn.value = state[denom].b;
+      const bIn = document.createElement("input");
+      bIn.inputMode = "numeric";
+      bIn.placeholder = "0";
+      bIn.value = state[denom].b;
       bIn.addEventListener("focus", (e) => triggerFocusPulse(e));
       bIn.addEventListener("input", () => {
-        playInputFeedbackSound();
         state[denom].b = sanitize(bIn.value);
         if (bIn.value !== state[denom].b) bIn.value = state[denom].b;
         update();
       });
 
-      const eq = document.createElement("button"); eq.className = "eqbtn"; eq.type = "button"; eq.textContent = "➔";
+      const eq = document.createElement("button");
+      eq.className = "eqbtn";
+      eq.type = "button";
+      eq.textContent = "➔";
       eq.addEventListener("click", (e) => {
         playTone(580, 'sine', 0.12);
         triggerRowSyncCut(e);
         state[denom].b = state[denom].a || "";
         bIn.value = state[denom].b;
-        bump("Sync_OK"); update();
+        bump("Sync_OK");
+        update();
       });
 
-      row.append(denomBlock, aIn, eq, bIn); rowsEl.appendChild(row);
+      row.append(denomBlock, aIn, eq, bIn);
+      rowsEl.appendChild(row);
     });
   }
 
@@ -692,44 +783,56 @@
     });
     state.cashboxSystem = payload.cashbox && payload.cashbox.system_amount != null ? String(payload.cashbox.system_amount) : "";
     cashboxSystemEl.value = state.cashboxSystem;
-    buildRows(); update();
+    buildRows();
+    update();
     const total = fmtMoney(payload.usable_total_amount);
     const time = payload.generated_at ? new Date(payload.generated_at).toLocaleTimeString("zh-TW", { hour12: false }) : "-";
-    sourceInfoEl.textContent = `量子帳目: ${total} [${time}]`; bump("Online");
+    sourceInfoEl.textContent = `量子帳目: ${total} [${time}]`;
+    bump("Online");
   }
 
   copyBtn.addEventListener("click", async () => {
-    playCopySound(); triggerCyanPillars();
+    playCopySound();
+    triggerCyanPillars();
     try {
-      await navigator.clipboard.writeText(outEl.value || ""); bump("Copied");
+      await navigator.clipboard.writeText(outEl.value || "");
+      bump("Copied");
     } catch {
-      outEl.focus(); outEl.select(); document.execCommand("copy"); bump("Copied");
+      outEl.focus(); outEl.select();
+      document.execCommand("copy");
+      bump("Copied");
     }
   });
 
   refreshBtn.addEventListener("click", () => {
-    playSyncSound(); triggerAmberRings();
+    playSyncSound();
+    triggerAmberRings();
     loadSystemCash().catch(() => bump("Error"));
   });
 
   resetBtn.addEventListener("click", () => {
-    playExplosionSound(); triggerPatternBlueExplosion();
+    playExplosionSound();
+    triggerPatternBlueExplosion();
     denoms.forEach(d => state[d].b = "");
-    state.cashboxActual = ""; cashboxActualEl.value = "";
-    buildRows(); update(); bump("Wiped");
+    state.cashboxActual = "";
+    cashboxActualEl.value = "";
+    buildRows();
+    update();
+    bump("Wiped");
   });
 
   cashboxActualEl.addEventListener("focus", (e) => triggerFocusPulse(e));
   cashboxActualEl.addEventListener("input", () => {
-    playInputFeedbackSound();
     state.cashboxActual = sanitize(cashboxActualEl.value);
     if (cashboxActualEl.value !== state.cashboxActual) cashboxActualEl.value = state.cashboxActual;
     update();
   });
 
-  buildRows(); update();
+  buildRows();
+  update();
   loadSystemCash().catch(() => {
-    sourceInfoEl.textContent = "OFFLINE_MODE // 核心連線中斷"; bump("Offline");
+    sourceInfoEl.textContent = "OFFLINE_MODE // 核心連線中斷";
+    bump("Offline");
   });
 })();
 </script>
