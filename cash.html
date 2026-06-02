@@ -675,7 +675,7 @@
   function bump(text) {
     statusEl.textContent = text;
     clearTimeout(bump.timer);
-    bump.timer = setTimeout(() => statusEl.textContent = "Ready", 1200);
+    bump.timer = setTimeout(() => statusEl.textContent = "▪︎Ready", 1200);
   }
 
   function fmtLine(denom, aQty, bQty, diffMoney) {
