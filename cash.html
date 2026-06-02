@@ -319,7 +319,7 @@
         
         <div class="small">
           <span>[SYS] マトリクスコピー A ➔ B</span>
-          <span id="sourceInfo">尚未同步量子數據</span>
+          <span id="sourceInfo">データ未同期</span>
         </div>
       </div>
     </div>
@@ -786,7 +786,7 @@
     update();
     const total = fmtMoney(payload.usable_total_amount);
     const time = payload.generated_at ? new Date(payload.generated_at).toLocaleTimeString("zh-TW", { hour12: false }) : "-";
-    sourceInfoEl.textContent = `量子帳目: ${total} [${time}]`;
+    sourceInfoEl.textContent = `▪︎最終同期値: ${total} [${time}]`;
     bump("▪︎Online");
   }
 
