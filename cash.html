@@ -196,9 +196,14 @@
   border: 1px solid var(--neon-cyan);
   color: var(--neon-cyan);
   background: rgba(0, 255, 204, 0.1);
-  box-shadow: var(--glow-cyan);
+  box-shadow:
+    0 0 12px #00ffcc,
+    0 0 24px rgba(0,255,204,.28),
+    inset 0 0 7px rgba(0,255,204,.35);
+  transform: translateZ(0);
+  will-change: opacity, transform;
 
-  animation: chipPulse 2.2s ease-in-out infinite;
+  animation: chipPulse 4.8s linear infinite;
 }
 
     /* 欄位網格標頭與內容容器 */
@@ -304,19 +309,56 @@
       100% { transform: translate(-2px, 3px) rotate(-1deg); }
     }
     @keyframes chipPulse {
-  0%,100% {
-    opacity: .65;
-    box-shadow:
-      0 0 6px #00ffcc,
-      inset 0 0 4px rgba(0,255,204,.25);
+  0%, 100% {
+    opacity: .58;
+    transform: translateZ(0) scale(1);
   }
 
-  50% {
+  7% {
+    opacity: .78;
+  }
+
+  9% {
+    opacity: .52;
+  }
+
+  11% {
+    opacity: .95;
+  }
+
+  13% {
+    opacity: .68;
+  }
+
+  25% {
+    opacity: .82;
+    transform: translateZ(0) scale(1.01);
+  }
+
+  46% {
     opacity: 1;
-    box-shadow:
-      0 0 18px #00ffcc,
-      0 0 28px rgba(0,255,204,.45),
-      inset 0 0 10px rgba(0,255,204,.45);
+    transform: translateZ(0) scale(1.025);
+  }
+
+  49% {
+    opacity: .38;
+  }
+
+  51% {
+    opacity: 1;
+  }
+
+  54% {
+    opacity: .72;
+  }
+
+  57% {
+    opacity: .96;
+  }
+
+  75% {
+    opacity: .76;
+    transform: translateZ(0) scale(1.01);
   }
 }
   </style>
