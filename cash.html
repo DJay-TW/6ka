@@ -365,12 +365,13 @@
   const CASH_API_URL = "https://6ka-cash-diff-api.jay-fbf.workers.dev/api/cash/current";
   
   const denomConfigs = [
-    { value: 1,   kanji: "壱圓",   kana: "⤓ 10 ⤒ 80" },
-    { value: 5,   kanji: "五圓",   kana: "⤓ 5 ⤒ 80" },
-    { value: 10,  kanji: "壱拾圓", kana: "⤓ 10 ⤒ 140" },
-    { value: 50,  kanji: "五拾圓", kana: "⤓ 5 ⤒ 50" },
-    { value: 100, kanji: "壱百圓", kana: "⤓ 10 ⤒ 100" },
-    { value: 500, kanji: "伍百圓", kana: "⤓ 5 ⤒ 100" }
+    { value: 1,   kanji: "壱圓",   kana: "▸ 保留数 10 / 容量 80" },
+    { value: 5,   kanji: "五圓",   kana: "▸ 保留数 5 / 容量 80" },
+    { value: 5,   kanji: "五圓",   kana: "▸ 保留数 5 / 容量 80" },
+    { value: 10,  kanji: "壱拾圓", kana: "▸ 保留数 10 / 容量 140" },
+    { value: 50,  kanji: "五拾圓", kana: "▸ 保留数 5 / 容量 50" },
+    { value: 100, kanji: "壱百圓", kana: "▸ 保留数 10 / 容量 100" },
+    { value: 500, kanji: "伍百圓", kana: "▸ 保留数 5 / 容量 100" }
   ];
   const denoms = denomConfigs.map(c => c.value);
 
