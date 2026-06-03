@@ -400,7 +400,7 @@
         <div class="cashbox-grid">
           <div class="cashbox-field">
             <label for="cashboxSystem">▶ SYSTEM_CASHBOX_A</label>
-            <input id="cashboxSystem" inputmode="numeric" readonly placeholder="LOCKED" />
+            <input id="cashboxSystem" inputmode="numeric" placeholder="INPUT" />
           </div>
           <div class="cashbox-field">
             <label for="cashboxActual">▶ ACTUAL_CASHBOX_B</label>
@@ -879,7 +879,9 @@
       const row = payload.denominations && payload.denominations[String(denom)];
       state[denom].a = row && row.quantity != null ? String(row.quantity) : "";
     });
-    state.cashboxSystem = payload.cashbox && payload.cashbox.system_amount != null ? String(payload.cashbox.system_amount) : "";
+    if (payload.cashbox && payload.cashbox.system_amount != null) {
+      state.cashboxSystem = String(payload.cashbox.system_amount);
+    }
     cashboxSystemEl.value = state.cashboxSystem;
     buildRows();
     update();
@@ -919,6 +921,12 @@
     bump("▪︎Wiped");
   });
 
+  cashboxSystemEl.addEventListener("focus", (e) => triggerFocusPulse(e));
+  cashboxSystemEl.addEventListener("input", () => {
+    state.cashboxSystem = sanitize(cashboxSystemEl.value);
+    if (cashboxSystemEl.value !== state.cashboxSystem) cashboxSystemEl.value = state.cashboxSystem;
+    update();
+  });
   cashboxActualEl.addEventListener("focus", (e) => triggerFocusPulse(e));
   cashboxActualEl.addEventListener("input", () => {
     state.cashboxActual = sanitize(cashboxActualEl.value);
