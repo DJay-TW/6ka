@@ -456,64 +456,135 @@
   state.cashboxActual = "";
 
   // ----------------------------------------------------
-  // 🎵 Web Audio API 音效
+  // 🎵 Web Audio API 音效 / MAGI_TERMINAL SOUND CORE
   // ----------------------------------------------------
   let audioCtx = null;
+  let masterGain = null;
+
   function initAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+      // 主音量控制：只作用在音效，不影響任何 UI / 業務邏輯
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.85;
+      masterGain.connect(audioCtx.destination);
+    }
+
+    if (audioCtx.state === "suspended") audioCtx.resume();
   }
 
-  function playTone(freq, type, duration, startTime = 0) {
+  function playTone(freq, type = "square", duration = 0.08, startTime = 0, volume = 0.22, detune = 0) {
     initAudio();
+
+    const now = audioCtx.currentTime + startTime;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
+
     osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
-    gain.gain.setValueAtTime(0.12, audioCtx.currentTime + startTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + startTime + duration);
+    osc.frequency.setValueAtTime(freq, now);
+    osc.detune.setValueAtTime(detune, now);
+
+    // 不再使用 bandpass，避免把音量吃掉
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(volume, now + 0.008);
+    gain.gain.setValueAtTime(volume * 0.72, now + Math.max(0.012, duration * 0.45));
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(audioCtx.currentTime + startTime);
-    osc.stop(audioCtx.currentTime + startTime + duration);
+    gain.connect(masterGain);
+
+    osc.start(now);
+    osc.stop(now + duration + 0.03);
+  }
+
+  function playNoise(duration = 0.18, startTime = 0, volume = 0.18, filterFreq = 800) {
+    initAudio();
+
+    const now = audioCtx.currentTime + startTime;
+    const bufferSize = Math.max(1, Math.floor(audioCtx.sampleRate * duration));
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      const fade = 1 - i / bufferSize;
+      data[i] = (Math.random() * 2 - 1) * fade;
+    }
+
+    const noise = audioCtx.createBufferSource();
+    const filter = audioCtx.createBiquadFilter();
+    const gain = audioCtx.createGain();
+
+    noise.buffer = buffer;
+
+    // 用高通保留電子雜訊感，但不要像 bandpass 一樣吃掉太多音量
+    filter.type = "highpass";
+    filter.frequency.setValueAtTime(filterFreq, now);
+    filter.Q.setValueAtTime(0.4, now);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+
+    noise.start(now);
+    noise.stop(now + duration);
   }
 
   function playCopySound() {
-    playTone(523.25, 'sine', 0.15, 0);
-    playTone(659.25, 'sine', 0.15, 0.08);
-    playTone(783.99, 'sine', 0.25, 0.16);
+    // 核心數據複製：比原 MAGI 版更低頻、更長、更大聲
+    playTone(523.25, "square", 0.09, 0.00, 0.28);
+    playTone(659.25, "square", 0.09, 0.075, 0.26);
+    playTone(880.00, "triangle", 0.16, 0.15, 0.30);
+    playNoise(0.06, 0.25, 0.08, 1200);
   }
 
   function playSyncSound() {
-    playTone(440, 'sine', 0.12, 0);
-    playTone(554.37, 'sine', 0.12, 0.06);
-    playTone(659.25, 'sine', 0.12, 0.12);
-    playTone(880, 'sine', 0.3, 0.18);
+    // 系統同步：中頻掃描 + 完成鎖定，保留機械感但提高體感音量
+    playTone(440.00, "square", 0.08, 0.00, 0.26, -5);
+    playTone(554.37, "square", 0.08, 0.065, 0.26, 4);
+    playTone(659.25, "square", 0.09, 0.13, 0.28, -3);
+    playNoise(0.07, 0.20, 0.10, 900);
+    playTone(880.00, "triangle", 0.20, 0.24, 0.34);
   }
 
   function playExplosionSound() {
+    // 資料清空：PATTERN BLUE 警告低頻下墜 + 白噪崩解
     initAudio();
+
     const now = audioCtx.currentTime;
     const osc = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(320, now);
-    osc.frequency.linearRampToValueAtTime(30, now + 1.8);
-    gainNode.gain.setValueAtTime(0.25, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
-    osc.connect(gainNode); gainNode.connect(audioCtx.destination);
-    osc.start(now); osc.stop(now + 1.8);
+    const lowpass = audioCtx.createBiquadFilter();
 
-    const bufferSize = audioCtx.sampleRate * 2.0;
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-    const noiseGain = audioCtx.createGain();
-    noiseGain.gain.setValueAtTime(0.3, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
-    noise.connect(noiseGain); noiseGain.connect(audioCtx.destination);
-    noise.start(now); noise.stop(now + 2.0);
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(360, now);
+    osc.frequency.exponentialRampToValueAtTime(34, now + 1.7);
+
+    lowpass.type = "lowpass";
+    lowpass.frequency.setValueAtTime(1800, now);
+    lowpass.frequency.exponentialRampToValueAtTime(180, now + 1.7);
+    lowpass.Q.setValueAtTime(0.6, now);
+
+    gainNode.gain.setValueAtTime(0.0001, now);
+    gainNode.gain.linearRampToValueAtTime(0.55, now + 0.04);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.85);
+
+    osc.connect(lowpass);
+    lowpass.connect(gainNode);
+    gainNode.connect(masterGain);
+
+    osc.start(now);
+    osc.stop(now + 1.9);
+
+    playTone(880, "square", 0.10, 0.00, 0.35);
+    playTone(660, "square", 0.10, 0.12, 0.34);
+    playTone(440, "square", 0.14, 0.25, 0.36);
+    playNoise(1.15, 0.35, 0.42, 260);
+    playNoise(0.32, 0.72, 0.20, 1400);
   }
 
   // ----------------------------------------------------
@@ -857,7 +928,7 @@
       eq.type = "button";
       eq.textContent = "➔";
       eq.addEventListener("click", (e) => {
-        playTone(580, 'sine', 0.12);
+        playTone(659.25, 'square', 0.08, 0, 0.28);
         triggerRowSyncCut(e);
         state[denom].b = state[denom].a || "";
         bIn.value = state[denom].b;
