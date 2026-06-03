@@ -190,10 +190,16 @@
     }
     .title h1 { font-size: 16px; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 0 0 10px var(--neon-cyan); }
     .chip {
-      font-size: 10px; font-weight: bold; padding: 2px 10px;
-      border: 1px solid var(--neon-cyan); color: var(--neon-cyan);
-      background: rgba(0, 255, 204, 0.1); box-shadow: var(--glow-cyan);
-    }
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 10px;
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  background: rgba(0, 255, 204, 0.1);
+  box-shadow: var(--glow-cyan);
+
+  animation: chipPulse 2.2s ease-in-out infinite;
+}
 
     /* 欄位網格標頭與內容容器 */
     .grid-container {
@@ -297,6 +303,22 @@
       80% { transform: translate(2px, -2px) rotate(1deg); }
       100% { transform: translate(-2px, 3px) rotate(-1deg); }
     }
+    @keyframes chipPulse {
+  0%,100% {
+    opacity: .65;
+    box-shadow:
+      0 0 6px #00ffcc,
+      inset 0 0 4px rgba(0,255,204,.25);
+  }
+
+  50% {
+    opacity: 1;
+    box-shadow:
+      0 0 18px #00ffcc,
+      0 0 28px rgba(0,255,204,.45),
+      inset 0 0 10px rgba(0,255,204,.45);
+  }
+}
   </style>
 </head>
 <body>
