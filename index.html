@@ -1,0 +1,2919 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>6KA 訊息中心</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-title" content="6KA">
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #0b0f17;
+            --panel: rgba(22, 30, 46, 0.65);
+            --panel-hover: rgba(28, 38, 58, 0.75);
+            --panel-2: #162031;
+            --line: rgba(255, 255, 255, 0.07);
+            --line-active: rgba(56, 189, 248, 0.3);
+            --text: #f1f5f9;
+            --muted: #64748b;
+            --soft: #94a3b8;
+            
+            /* 莫蘭迪霓虹色系 */
+            --green: #10b981;
+            --cyan: #0ea5e9;
+            --amber: #f59e0b;
+            --red: #ef4444;
+            --violet: #6366f1;
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: 
+                radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 10% 80%, rgba(14, 165, 233, 0.08) 0%, transparent 50%),
+                #070a0f;
+            color: var(--text);
+            font-family: system-ui, -apple-system, "SF Pro TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            font-size: 20px; /* 字級加大，維持監控面板可讀性 */
+            letter-spacing: 0.01em;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            min-height: 24px;
+            padding: 3px 10px; /* 頂端狀態列盡量薄 */
+            border-bottom: 1px solid var(--line);
+            background: rgba(7, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        main {
+            width: min(1120px, calc(100% - 12px)); /* PC 版收窄約 20%，方便瀏覽器手動放大 */
+            margin: 6px auto 18px; /* 降低上下留白 */
+        }
+
+        .status {
+            color: var(--soft);
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1px 6px;
+            border-radius: 99px;
+            border: 1px solid var(--line);
+        }
+
+        .panel-list {
+            display: grid;
+            gap: 6px; /* 大幅縮小卡片間距 */
+            position: relative;
+        }
+
+        .panel {
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--panel);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: var(--panel-hover);
+        }
+
+        .panel.dragging {
+            opacity: 0.3;
+        }
+
+        /* 手機端被拖動浮起時的樣式 */
+        .panel.touch-dragging {
+            opacity: 0.95 !important;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5) !important;
+            border-color: var(--cyan) !important;
+            background: rgba(28, 38, 58, 0.98) !important;
+            transform: scale(1.01);
+            transition: none !important;
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            padding: 8px 12px; /* 壓縮頭部留白 */
+            border-bottom: 1px solid var(--line);
+            user-select: none;
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex-grow: 1;
+        }
+
+        .panel-title h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+
+        .drag-mark {
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 24px;
+            cursor: grab;
+            padding: 2px 8px;
+            margin-left: -8px;
+            touch-action: none;
+        }
+
+        .drag-mark:active {
+            color: var(--cyan);
+        }
+
+        .panel-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 26px;
+            height: 26px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--soft);
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .panel-body {
+            padding: 8px; /* 全面縮減內容留白 */
+        }
+
+        .panel.collapsed .panel-body {
+            display: none;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 6px; /* 減少間距 */
+        }
+
+        .metric {
+            min-height: 78px; /* 字級變大後仍保持緊湊 */
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.015);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .metric-label {
+            color: var(--soft);
+            font-size: 17px;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1.1;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(180deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .payment-summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .payment-chip {
+            min-width: 0;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.012);
+            padding: 5px 7px;
+            color: var(--soft);
+            font-size: 13px;
+            line-height: 1.35;
+        }
+
+        .payment-chip strong {
+            display: block;
+            margin-top: 1px;
+            color: #dbeafe;
+            font-size: 15px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .fault-code-box {
+            display: none;
+            margin-top: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.18);
+            border-radius: 6px;
+            background: rgba(127, 29, 29, 0.12);
+            padding: 7px;
+        }
+
+        .fault-code-box.is-active {
+            display: block;
+        }
+
+        .fault-code-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            color: #fecaca;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .fault-code-list {
+            display: grid;
+            gap: 4px;
+        }
+
+        .fault-code-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: center;
+            color: #fee2e2;
+            font-size: 14px;
+            line-height: 1.35;
+        }
+
+        .fault-code-item strong {
+            color: #fff;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .system-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 6px;
+        }
+
+        .subpanel {
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.005);
+            padding: 8px;
+        }
+
+        .subpanel-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            color: var(--cyan); /* 換個更醒目的顏色 */
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .machine-title {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .line-list {
+            display: grid;
+            gap: 4px; /* 緊湊行距 */
+        }
+
+        .line-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 18px;
+        }
+
+        .line-item:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .line-item span:first-child {
+            color: var(--soft); /* 提升可讀性 */
+        }
+
+        .line-item strong {
+            font-weight: 500;
+            color: #fff; /* 提亮數值 */
+        }
+
+        .line-item strong.danger-value {
+            color: #fca5a5;
+        }
+
+        .cash-denoms {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .cash-denom {
+            border: 1px solid rgba(255, 255, 255, 0.035);
+            border-radius: 6px;
+            padding: 4px 5px;
+            background: rgba(255, 255, 255, 0.012);
+        }
+
+        .cash-denom span {
+            display: block;
+            color: var(--soft);
+            font-size: 13px;
+        }
+
+        .cash-denom strong {
+            display: block;
+            color: #f8fafc;
+            font-size: 18px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .compact-sensor-table {
+            margin-top: 6px;
+            font-size: 14px;
+            table-layout: fixed;
+        }
+
+        .compact-sensor-table th,
+        .compact-sensor-table td {
+            padding: 4px 5px;
+            white-space: nowrap;
+        }
+
+        .compact-sensor-table th {
+            font-size: 12px;
+        }
+
+        .compact-sensor-table th:first-child,
+        .compact-sensor-table td:first-child {
+            width: 28%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 70px;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .pill.ok { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+        .pill.warn { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .pill.danger { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+        .pill.neutral { background: rgba(100, 116, 139, 0.16); color: #94a3b8; }
+
+        .pill[data-log-service] {
+            cursor: pointer;
+        }
+
+        .pill[data-log-service]:hover,
+        .pill[data-log-service]:focus-visible {
+            outline: 1px solid rgba(226, 232, 240, 0.42);
+            outline-offset: 2px;
+        }
+
+        .live-screen-row {
+            cursor: pointer;
+        }
+
+        .live-screen-row[aria-disabled="true"] {
+            cursor: wait;
+        }
+
+        .live-screen-status {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .control-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-btn {
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.035);
+            color: #cbd5e1;
+            cursor: pointer;
+            font: inherit;
+            font-size: 13px;
+            line-height: 1;
+            padding: 4px 6px;
+        }
+
+        .control-btn:hover {
+            border-color: rgba(14, 165, 233, 0.42);
+            color: #e2e8f0;
+        }
+
+        .control-btn.danger {
+            color: #fca5a5;
+        }
+
+        .control-btn:disabled {
+            cursor: wait;
+            opacity: 0.48;
+        }
+
+        .reboot-btn {
+            min-width: 36px;
+            height: 24px;
+            flex: 0 0 auto;
+            padding: 0 8px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .service-switch {
+            position: relative;
+            width: 48px;
+            height: 25px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 999px;
+            background: rgba(100, 116, 139, 0.22);
+            cursor: pointer;
+            flex: 0 0 48px;
+            padding: 0;
+        }
+
+        .service-switch::before {
+            content: "";
+            position: absolute;
+            inset: 4px auto 4px 4px;
+            width: 15px;
+            border-radius: 999px;
+            background: #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+            transition: transform 0.18s ease, background-color 0.18s ease;
+        }
+
+        .service-switch.is-on {
+            border-color: rgba(16, 185, 129, 0.38);
+            background: rgba(16, 185, 129, 0.28);
+        }
+
+        .service-switch.is-on::before {
+            transform: translateX(23px);
+            background: #6ee7b7;
+        }
+
+        .service-switch.is-busy {
+            cursor: wait;
+            opacity: 0.55;
+        }
+
+        .service-switch:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+        }
+
+        .audio-actions {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 5px;
+            padding-top: 4px;
+        }
+
+        .audio-volume-bar {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 7px;
+            padding: 4px 0 3px;
+            color: var(--soft);
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .audio-volume-bar input[type="range"] {
+            width: 100%;
+            height: 24px;
+            margin: 0;
+            accent-color: #94a3b8;
+            cursor: pointer;
+        }
+
+        .audio-volume-bar input[type="range"]:disabled {
+            cursor: default;
+            opacity: 0.35;
+        }
+
+        .audio-btn {
+            min-height: 28px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 5px;
+            background: rgba(148, 163, 184, 0.055);
+            color: #cbd5e1;
+            cursor: pointer;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            padding: 4px 5px;
+        }
+
+        .audio-btn:hover:not(:disabled) {
+            border-color: rgba(148, 163, 184, 0.32);
+            color: #f8fafc;
+            background: rgba(148, 163, 184, 0.11);
+        }
+
+        .audio-btn:disabled {
+            cursor: default;
+            opacity: 0.32;
+        }
+
+        .confirm-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: grid;
+            place-items: center;
+            padding: 16px;
+            background: rgba(2, 6, 23, 0.68);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .confirm-backdrop[hidden] {
+            display: none;
+        }
+
+        .confirm-dialog {
+            width: min(360px, 100%);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.96);
+            box-shadow: 0 22px 70px rgba(0, 0, 0, 0.5);
+            padding: 14px;
+        }
+
+        .confirm-title {
+            margin: 0 0 6px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        .confirm-message {
+            margin: 0 0 14px;
+            color: #cbd5e1;
+            font-size: 16px;
+            line-height: 1.45;
+        }
+
+        .confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .confirm-actions .control-btn {
+            min-width: 68px;
+            padding: 8px 10px;
+            font-size: 15px;
+        }
+
+        .log-dialog {
+            width: min(980px, 100%);
+            max-height: min(82vh, 760px);
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+            gap: 10px;
+        }
+
+        .log-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .log-meta {
+            margin: 4px 0 0;
+            color: #94a3b8;
+            font-size: 13px;
+            line-height: 1.35;
+            word-break: break-all;
+        }
+
+        .log-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .log-output {
+            min-height: 360px;
+            max-height: 62vh;
+            margin: 0;
+            overflow: auto;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 8px;
+            background: rgba(2, 6, 23, 0.78);
+            color: #dbeafe;
+            padding: 12px;
+            font: 13px/1.5 Consolas, "Cascadia Mono", monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .screen-dialog {
+            width: min(920px, 100%);
+            max-height: min(90vh, 760px);
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+            gap: 0;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .screen-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .screen-close {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .screen-body {
+            min-height: 280px;
+            display: grid;
+            place-items: center;
+            overflow: auto;
+            background: #05070b;
+        }
+
+        .screen-body img {
+            display: block;
+            max-width: 100%;
+            max-height: calc(min(90vh, 760px) - 58px);
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .screen-placeholder {
+            color: #94a3b8;
+            font-size: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 18px;
+        }
+
+        th, td {
+            padding: 7px 8px; /* 壓縮表格內距 */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            text-align: left;
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        td {
+            color: #e2e8f0;
+        }
+
+        .number, .money {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .chart-wrap {
+            display: grid;
+            gap: 6px;
+        }
+
+        .chart-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            color: var(--soft);
+            font-size: 16px;
+        }
+
+        .chart-toolbar select {
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text);
+            padding: 3px 7px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .chart {
+            width: 100%;
+            height: 205px; /* 圖表略收，讓面板更密 */
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            background: rgba(5, 8, 13, 0.4);
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px 12px;
+            color: var(--soft);
+            font-size: 15px;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 99px;
+        }
+
+        .error {
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        /* 手機端極致緊湊優化 */
+        @media (max-width: 768px) {
+            header {
+                justify-content: space-between;
+                gap: 8px;
+                padding: 3px 8px;
+            }
+
+            h1 {
+                font-size: 13px;
+            }
+
+            .status {
+                font-size: 11px;
+                padding: 1px 5px;
+            }
+            
+            main {
+                width: min(100% - 8px, 1400px);
+                margin: 6px auto 14px;
+            }
+
+            .panel-list {
+                gap: 5px;
+            }
+
+            .panel-head {
+                padding: 7px 10px;
+            }
+
+            .panel-body {
+                padding: 6px;
+            }
+
+            .metric-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)); /* 行動端改成兩欄緊湊並排，大幅縮減垂直高度 */
+                gap: 5px;
+            }
+
+            .metric {
+                min-height: 70px;
+                padding: 7px;
+            }
+
+            .metric-value {
+                font-size: 32px;
+            }
+
+            .system-grid {
+                gap: 5px;
+            }
+
+            .subpanel {
+                padding: 7px;
+            }
+
+            .line-item {
+                font-size: 17px;
+                padding-bottom: 4px;
+            }
+
+            .service-switch {
+                width: 46px;
+                height: 24px;
+                flex-basis: 46px;
+            }
+
+            .service-switch.is-on::before {
+                transform: translateX(21px);
+            }
+
+            th, td {
+                padding: 6px 5px; /* 壓縮表格寬度與內距，避免橫向超出螢幕 */
+                font-size: 17px;
+            }
+
+            .compact-sensor-table th,
+            .compact-sensor-table td {
+                padding: 4px 4px;
+                font-size: 13px;
+            }
+            
+            .chart {
+                height: 165px; /* 圖表高度再壓縮，留出視覺空間 */
+            }
+
+            .confirm-backdrop {
+                padding: 8px;
+            }
+
+            .screen-dialog {
+                max-height: calc(100vh - 16px);
+            }
+
+            .screen-head {
+                padding: 9px 10px;
+            }
+
+            .screen-body {
+                min-height: 220px;
+            }
+
+            .screen-body img {
+                max-height: calc(100vh - 82px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Menya Rokka Dashboard</h1>
+        <div class="status" id="status">讀取中...</div>
+    </header>
+
+    <main>
+        <div class="panel-list" id="panelList">
+            <section class="panel" data-panel="today" draggable="true">
+                <div class="panel-head">
+                    <div class="panel-title"><span class="drag-mark">≡</span><h2>今日營業</h2></div>
+                    <div class="panel-actions"><button class="icon-btn" data-collapse>⌃</button></div>
+                </div>
+                <div class="panel-body">
+                    <div class="metric-grid">
+                        <div class="metric"><div class="metric-label">單數</div><div class="metric-value" id="orderCount">-</div></div>
+                        <div class="metric"><div class="metric-label">本日碗數</div><div class="metric-value" id="bowlCount">-</div></div>
+                        <div class="metric"><div class="metric-label">實收金額</div><div class="metric-value" id="paymentAmount">-</div></div>
+                        <div class="metric"><div class="metric-label">最後訂單</div><div class="metric-value" id="latestOrder">-</div></div>
+                    </div>
+                    <div class="payment-summary" id="paymentSummary"></div>
+                    <div class="fault-code-box" id="faultCodeBox">
+                        <div class="fault-code-title">
+                            <span>本日故障碼</span>
+                            <span id="faultCodeTotal">-</span>
+                        </div>
+                        <div class="fault-code-list" id="faultCodeList"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel" data-panel="month" draggable="true">
+                <div class="panel-head">
+                    <div class="panel-title"><span class="drag-mark">≡</span><h2>本月累計</h2></div>
+                    <div class="panel-actions"><button class="icon-btn" data-collapse>⌃</button></div>
+                </div>
+                <div class="panel-body">
+                    <div class="metric-grid">
+                        <div class="metric"><div class="metric-label">累計碗數</div><div class="metric-value" id="monthBowls">-</div></div>
+                        <div class="metric"><div class="metric-label">日均碗數</div><div class="metric-value" id="avgBowls">-</div></div>
+                        <div class="metric"><div class="metric-label">累計營業額</div><div class="metric-value" id="monthRevenue">-</div></div>
+                        <div class="metric"><div class="metric-label">日均營業額</div><div class="metric-value" id="avgRevenue">-</div></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel" data-panel="salesRiver" draggable="true">
+                <div class="panel-head">
+                    <div class="panel-title"><span class="drag-mark">≡</span><h2>30 分鐘營業額</h2></div>
+                    <div class="panel-actions"><button class="icon-btn" data-collapse>⌃</button></div>
+                </div>
+                <div class="panel-body">
+                    <div class="chart-wrap">
+                        <div class="chart-toolbar">
+                            <span>單位：元 / 30 分鐘</span>
+                            <label>
+                                <select id="salesScale">
+                                    <option value="auto">自動尺度</option>
+                                    <option value="5000">0-5,000</option>
+                                    <option value="10000">0-10,000</option>
+                                    <option value="20000">0-20,000</option>
+                                </select>
+                            </label>
+                        </div>
+                        <canvas class="chart" id="salesRiver"></canvas>
+                        <div class="legend">
+                            <span class="legend-item"><span class="dot" style="background:#0ea5e9"></span>實收</span>
+                            <span class="legend-item"><span class="dot" style="background:#94a3b8"></span>tooltip 顯示碗數 / 單數</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel" data-panel="system" draggable="true">
+                <div class="panel-head">
+                    <div class="panel-title"><span class="drag-mark">≡</span><h2>系統狀態</h2></div>
+                    <div class="panel-actions"><button class="icon-btn" data-collapse>⌃</button></div>
+                </div>
+                <div class="panel-body">
+                    <div class="system-grid">
+                        <div class="subpanel">
+                            <div class="subpanel-title"><span class="machine-title">本台伺服器</span><button class="control-btn reboot-btn" data-control="reboot-server" title="重啟本台伺服器" aria-label="重啟本台伺服器">重啟</button></div>
+                            <div class="line-list">
+                                <div class="line-item"><span>主機</span><strong id="serverHost">-</strong></div>
+                                <div class="line-item"><span>網址</span><strong id="webAddress">-</strong></div>
+                                <div class="line-item"><span>上線時間</span><strong id="serverUptime">-</strong></div>
+                                <div class="line-item"><span>記憶體</span><strong id="serverMemory">-</strong></div>
+                                <div class="line-item"><span>Node 記憶體</span><strong id="nodeMemory">-</strong></div>
+                                <div class="line-item"><span>營業回報</span><span class="control-group"><span id="rp5Service" class="pill">-</span><button class="service-switch" id="rp5Toggle" data-control="toggle-rp5" aria-label="切換營業回報"></button></span></div>
+                                <div class="line-item"><span>廚房製作單</span><span class="control-group"><span id="kitchenDcService" class="pill">-</span><button class="service-switch" id="kitchenDcToggle" data-control="toggle-kitchen" aria-label="切換廚房製作單"></button></span></div>
+                                <div class="line-item"><span>找零機故障碼</span><span class="control-group"><span id="cashExceptionService" class="pill">-</span><button class="service-switch" id="cashExceptionToggle" data-control="toggle-cash-exception" aria-label="切換找零機故障碼監控"></button></span></div>
+                                <div class="line-item"><span>錢箱推算</span><span class="control-group"><span id="cashboxEstimatorService" class="pill">-</span><button class="service-switch" id="cashboxEstimatorToggle" data-control="toggle-cashbox-estimator" aria-label="切換錢箱推算"></button></span></div>
+                            </div>
+                        </div>
+                        <div class="subpanel">
+                            <div class="subpanel-title"><span class="machine-title">售票機</span><button class="control-btn reboot-btn" data-control="reboot-kiosk" title="呼叫售票機桌面重啟捷徑" aria-label="呼叫售票機桌面重啟捷徑">重啟</button></div>
+                            <div class="line-list">
+                                <div class="line-item"><span>連線</span><span id="kioskConnection" class="pill">-</span></div>
+                                <div class="line-item"><span>查詢延遲</span><strong id="kioskLatency">-</strong></div>
+                                <div class="line-item"><span>最後成功</span><strong id="kioskSuccess">-</strong></div>
+                                <div class="line-item"><span>營業 DB 新鮮度</span><strong id="kioskSalesFreshness">-</strong></div>
+                                <div class="line-item"><span>現金 DB 新鮮度</span><strong id="kioskCashFreshness">-</strong></div>
+                                <div class="line-item"><span>最新訂單</span><strong id="kioskLatestOrder">-</strong></div>
+                                <div class="line-item"><span>同步出錯</span><strong id="kioskSyncError">-</strong></div>
+                                <div class="line-item"><span>自動糾錯</span><strong id="kioskCorrection">-</strong></div>
+                                <div class="line-item live-screen-row" id="kioskLiveScreen" role="button" tabindex="0" title="更新售票機截圖並開啟圖片檢視" aria-label="更新售票機截圖並開啟圖片檢視">
+                                    <span>即時畫面</span><strong id="kioskLiveScreenStatus" class="live-screen-status">-</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="subpanel">
+                            <div class="subpanel-title">找零機</div>
+                            <div class="line-list">
+                                <div class="line-item"><span>找零/找鈔總額</span><strong id="cashUsableTotal">-</strong></div>
+                                <div class="line-item"><span>前次清鈔</span><strong id="cashBoxAmount">-</strong></div>
+                                <div class="line-item"><span>錢箱推算</span><strong id="cashboxEstimateAmount">-</strong></div>
+                                <div class="line-item"><span>未入差額</span><strong id="cashboxUnpostedDiff">-</strong></div>
+                                <div class="line-item"><span>最後同步</span><strong id="cashLastSync">-</strong></div>
+                                <div class="line-item"><span>最新紀錄</span><strong id="cashLatestRecord">-</strong></div>
+                            </div>
+                            <div class="cash-denoms">
+                                <div class="cash-denom"><span>$500</span><strong id="cashDenom500">-</strong></div>
+                                <div class="cash-denom"><span>$100</span><strong id="cashDenom100">-</strong></div>
+                                <div class="cash-denom"><span>$50</span><strong id="cashDenom50">-</strong></div>
+                                <div class="cash-denom"><span>$10</span><strong id="cashDenom10">-</strong></div>
+                                <div class="cash-denom"><span>$5</span><strong id="cashDenom5">-</strong></div>
+                                <div class="cash-denom"><span>$1</span><strong id="cashDenom1">-</strong></div>
+                            </div>
+                        </div>
+                        <div class="subpanel">
+                            <div class="subpanel-title"><span class="machine-title">樹莓派</span><button class="control-btn reboot-btn" data-control="reboot-pi" title="重啟樹莓派" aria-label="重啟樹莓派">重啟</button></div>
+                            <div class="line-list">
+                                <div class="line-item"><span>主機</span><strong id="piHost">-</strong></div>
+                                <div class="line-item"><span>上線時間</span><strong id="piUptime">-</strong></div>
+                                <div class="line-item"><span>CPU 溫度</span><strong id="piCpuTemp">-</strong></div>
+                                <div class="line-item"><span>記憶體</span><strong id="piMemory">-</strong></div>
+                                <div class="line-item"><span>播放器</span><span class="control-group"><span id="playerService" class="pill">-</span><button class="service-switch" id="playerToggle" data-control="toggle-player" aria-label="切換播放器"></button></span></div>
+                                <div class="line-item"><span>溫度計</span><span class="control-group"><span id="tempService" class="pill">-</span><button class="service-switch" id="tempToggle" data-control="toggle-temp" aria-label="切換溫度計"></button></span></div>
+                            </div>
+                        </div>
+                        <div class="subpanel">
+                            <div class="subpanel-title">聲霸</div>
+                            <div class="line-list">
+                                <div class="line-item"><span>裝置</span><span id="audioAvailable" class="pill">-</span></div>
+                                <div class="line-item"><span>音量</span><strong id="audioVolume">-</strong></div>
+                                <div class="line-item"><span>靜音</span><strong id="audioMuted">-</strong></div>
+                                <div class="audio-volume-bar">
+                                    <span>0</span>
+                                    <input id="audioVolumeSlider" type="range" min="0" max="100" step="1" value="50" aria-label="調整聲霸音量" disabled>
+                                    <span>100</span>
+                                </div>
+                                <div class="audio-actions">
+                                    <button class="audio-btn" data-audio-volume="0" type="button">MUTE</button>
+                                    <button class="audio-btn" data-audio-volume="50" type="button">NORMAL</button>
+                                    <button class="audio-btn" data-audio-volume="100" type="button">MAX</button>
+                                    <button class="audio-btn" data-audio-test="order" type="button">ORDER</button>
+                                    <button class="audio-btn" data-audio-test="offline" type="button">OFFLINE</button>
+                                    <button class="audio-btn" data-audio-test="online" type="button">ONLINE</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="subpanel">
+                            <div class="subpanel-title">溫度監控</div>
+                            <div class="line-list">
+                                <div class="line-item"><span>連線</span><span id="tempConnection" class="pill">-</span></div>
+                                <div class="line-item"><span>狀態</span><span id="tempComfort" class="pill">-</span></div>
+                                <div class="line-item"><span>用餐區 EMA</span><strong id="tempEma">-</strong></div>
+                            </div>
+                            <table class="compact-sensor-table">
+                                <thead><tr><th>位置</th><th class="number">溫度</th><th class="number">濕度</th><th class="number">電量</th><th class="number">更新</th></tr></thead>
+                                <tbody id="temperatureSensors"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel" data-panel="tempRiver" draggable="true">
+                <div class="panel-head">
+                    <div class="panel-title"><span class="drag-mark">≡</span><h2>溫度河流圖</h2></div>
+                    <div class="panel-actions"><button class="icon-btn" data-collapse>⌃</button></div>
+                </div>
+                <div class="panel-body">
+                    <div class="chart-wrap">
+                        <div class="chart-toolbar">
+                            <span>單位：°C</span>
+                            <label>
+                                <select id="tempScale">
+                                    <option value="auto">自動尺度</option>
+                                    <option value="20-35">20-35°C</option>
+                                    <option value="22-30">22-30°C</option>
+                                    <option value="15-40">15-40°C</option>
+                                </select>
+                            </label>
+                        </div>
+                        <canvas class="chart" id="tempRiver"></canvas>
+                        <div class="legend">
+                            <span class="legend-item"><span class="dot" style="background:#0ea5e9"></span>右六</span>
+                            <span class="legend-item"><span class="dot" style="background:#10b981"></span>左四</span>
+                            <span class="legend-item"><span class="dot" style="background:#f59e0b"></span>廚房</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel error" data-panel="errors" id="errorPanel" hidden>
+                <div class="panel-body"></div>
+            </section>
+        </div>
+    </main>
+
+    <div class="confirm-backdrop" id="confirmDialog" hidden>
+        <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+            <h3 class="confirm-title" id="confirmTitle">確認操作</h3>
+            <p class="confirm-message" id="confirmMessage">確定要執行嗎？</p>
+            <div class="confirm-actions">
+                <button class="control-btn" id="confirmCancel" type="button">取消</button>
+                <button class="control-btn danger" id="confirmOk" type="button">執行</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="confirm-backdrop" id="logDialog" hidden>
+        <div class="confirm-dialog log-dialog" role="dialog" aria-modal="true" aria-labelledby="logTitle" aria-describedby="logMeta">
+            <div class="log-head">
+                <div>
+                    <h3 class="confirm-title" id="logTitle">即時 log</h3>
+                    <p class="log-meta" id="logMeta">-</p>
+                </div>
+                <div class="log-actions">
+                    <button class="control-btn" id="logRefresh" type="button">刷新</button>
+                    <button class="control-btn" id="logAuto" type="button">暫停</button>
+                    <button class="control-btn" id="logClose" type="button">關閉</button>
+                </div>
+            </div>
+            <pre class="log-output" id="logContent">-</pre>
+        </div>
+    </div>
+
+    <div class="confirm-backdrop" id="kioskScreenDialog" hidden>
+        <div class="confirm-dialog screen-dialog" role="dialog" aria-modal="true" aria-labelledby="kioskScreenTitle" aria-describedby="kioskScreenMeta">
+            <div class="screen-head">
+                <div>
+                    <h3 class="confirm-title" id="kioskScreenTitle">售票機即時畫面</h3>
+                    <p class="log-meta" id="kioskScreenMeta">-</p>
+                </div>
+                <button class="control-btn screen-close" id="kioskScreenClose" type="button" aria-label="關閉即時畫面">X</button>
+            </div>
+            <div class="screen-body">
+                <img id="kioskScreenImage" alt="售票機即時畫面" hidden>
+                <div class="screen-placeholder" id="kioskScreenPlaceholder">讀取中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const HISTORY_LIMIT = 160;
+        const MIN_CHART_SPAN_MS = 12 * 60 * 60 * 1000;
+        const SALES_BUCKET_MS = 30 * 60 * 1000;
+        const TEMP_HISTORY_BUCKET_MS = 10 * 60 * 1000;
+        const ORDER_KEY = '6ka.panel.order';
+        const COLLAPSE_KEY = '6ka.panel.collapsed';
+        const SALES_HISTORY_KEY = '6ka.history.sales';
+        const TEMP_HISTORY_KEY = '6ka.history.temperature';
+        const RIVER_HOVER = new WeakMap();
+        const AUDIO_API_URL = '/api/control/pi-audio';
+        const KIOSK_SCREEN_REFRESH_MS = 1000;
+        const KIOSK_SCREEN_OFFLINE_RETRY_MS = 5000;
+
+        const ids = {
+            status: document.getElementById('status'),
+            orderCount: document.getElementById('orderCount'),
+            bowlCount: document.getElementById('bowlCount'),
+            paymentAmount: document.getElementById('paymentAmount'),
+            latestOrder: document.getElementById('latestOrder'),
+            monthBowls: document.getElementById('monthBowls'),
+            avgBowls: document.getElementById('avgBowls'),
+            monthRevenue: document.getElementById('monthRevenue'),
+            avgRevenue: document.getElementById('avgRevenue'),
+            paymentSummary: document.getElementById('paymentSummary'),
+            faultCodeBox: document.getElementById('faultCodeBox'),
+            faultCodeTotal: document.getElementById('faultCodeTotal'),
+            faultCodeList: document.getElementById('faultCodeList'),
+            piHost: document.getElementById('piHost'),
+            piUptime: document.getElementById('piUptime'),
+            piCpuTemp: document.getElementById('piCpuTemp'),
+            piMemory: document.getElementById('piMemory'),
+            playerService: document.getElementById('playerService'),
+            tempService: document.getElementById('tempService'),
+            audioAvailable: document.getElementById('audioAvailable'),
+            audioVolume: document.getElementById('audioVolume'),
+            audioMuted: document.getElementById('audioMuted'),
+            audioVolumeSlider: document.getElementById('audioVolumeSlider'),
+            tempConnection: document.getElementById('tempConnection'),
+            tempComfort: document.getElementById('tempComfort'),
+            tempEma: document.getElementById('tempEma'),
+            temperatureSensors: document.getElementById('temperatureSensors'),
+            errorPanel: document.getElementById('errorPanel'),
+            salesRiver: document.getElementById('salesRiver'),
+            tempRiver: document.getElementById('tempRiver'),
+            salesScale: document.getElementById('salesScale'),
+            tempScale: document.getElementById('tempScale'),
+            kioskConnection: document.getElementById('kioskConnection'),
+            kioskLatency: document.getElementById('kioskLatency'),
+            kioskSuccess: document.getElementById('kioskSuccess'),
+            kioskSalesFreshness: document.getElementById('kioskSalesFreshness'),
+            kioskCashFreshness: document.getElementById('kioskCashFreshness'),
+            kioskLatestOrder: document.getElementById('kioskLatestOrder'),
+            kioskSyncError: document.getElementById('kioskSyncError'),
+            kioskCorrection: document.getElementById('kioskCorrection'),
+            kioskLiveScreen: document.getElementById('kioskLiveScreen'),
+            kioskLiveScreenStatus: document.getElementById('kioskLiveScreenStatus'),
+            cashUsableTotal: document.getElementById('cashUsableTotal'),
+            cashBoxAmount: document.getElementById('cashBoxAmount'),
+            cashboxEstimateAmount: document.getElementById('cashboxEstimateAmount'),
+            cashboxUnpostedDiff: document.getElementById('cashboxUnpostedDiff'),
+            cashLastSync: document.getElementById('cashLastSync'),
+            cashLatestRecord: document.getElementById('cashLatestRecord'),
+            cashDenom500: document.getElementById('cashDenom500'),
+            cashDenom100: document.getElementById('cashDenom100'),
+            cashDenom50: document.getElementById('cashDenom50'),
+            cashDenom10: document.getElementById('cashDenom10'),
+            cashDenom5: document.getElementById('cashDenom5'),
+            cashDenom1: document.getElementById('cashDenom1'),
+            serverHost: document.getElementById('serverHost'),
+            serverUptime: document.getElementById('serverUptime'),
+            serverMemory: document.getElementById('serverMemory'),
+            rp5Service: document.getElementById('rp5Service'),
+            kitchenDcService: document.getElementById('kitchenDcService'),
+            cashExceptionService: document.getElementById('cashExceptionService'),
+            cashExceptionToggle: document.getElementById('cashExceptionToggle'),
+            cashboxEstimatorService: document.getElementById('cashboxEstimatorService'),
+            cashboxEstimatorToggle: document.getElementById('cashboxEstimatorToggle'),
+            rp5Toggle: document.getElementById('rp5Toggle'),
+            kitchenDcToggle: document.getElementById('kitchenDcToggle'),
+            playerToggle: document.getElementById('playerToggle'),
+            tempToggle: document.getElementById('tempToggle'),
+            webAddress: document.getElementById('webAddress'),
+            nodeMemory: document.getElementById('nodeMemory'),
+            panelList: document.getElementById('panelList'),
+            confirmDialog: document.getElementById('confirmDialog'),
+            confirmTitle: document.getElementById('confirmTitle'),
+            confirmMessage: document.getElementById('confirmMessage'),
+            confirmCancel: document.getElementById('confirmCancel'),
+            confirmOk: document.getElementById('confirmOk'),
+            logDialog: document.getElementById('logDialog'),
+            logTitle: document.getElementById('logTitle'),
+            logMeta: document.getElementById('logMeta'),
+            logContent: document.getElementById('logContent'),
+            logRefresh: document.getElementById('logRefresh'),
+            logAuto: document.getElementById('logAuto'),
+            logClose: document.getElementById('logClose'),
+            kioskScreenDialog: document.getElementById('kioskScreenDialog'),
+            kioskScreenImage: document.getElementById('kioskScreenImage'),
+            kioskScreenPlaceholder: document.getElementById('kioskScreenPlaceholder'),
+            kioskScreenMeta: document.getElementById('kioskScreenMeta'),
+            kioskScreenClose: document.getElementById('kioskScreenClose'),
+        };
+
+        const LOG_SERVICE_LABELS = {
+            rp5: '營業回報',
+            kitchen_dc: '廚房製作單',
+            cash_exception: '找零機故障碼',
+            cashbox_estimator: '錢箱推算',
+            player: '播放器',
+            temperature: '溫度計',
+        };
+        let currentLogService = null;
+        let logRefreshTimer = null;
+        let logAutoRefresh = true;
+        let logRequestSeq = 0;
+        let kioskScreenRequestSeq = 0;
+        let kioskScreenRefreshTimer = null;
+        let kioskScreenAbortController = null;
+        let kioskScreenLastUpdatedAt = null;
+
+        function loadJson(key, fallback) {
+            try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+        }
+
+        function saveJson(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+
+        function money(value) {
+            const number = Math.round(Number(value || 0));
+            return `$ ${number.toLocaleString('zh-TW')}`;
+        }
+
+        function decimal(value) { return Number(value || 0).toFixed(2); }
+
+        function animateNumber(target, value, formatter = value => String(Math.round(value))) {
+            const end = Number(value || 0);
+            const start = Number(target.dataset.value || end);
+            target.dataset.value = String(end);
+            if (start === end) {
+                target.textContent = formatter(end);
+                return;
+            }
+
+            const duration = 400;
+            const started = performance.now();
+            const tick = now => {
+                const progress = Math.min(1, (now - started) / duration);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const current = start + (end - start) * eased;
+                target.textContent = formatter(current);
+                if (progress < 1) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+        }
+
+        function timeOnly(value) {
+            if (!value) return '-';
+            return String(value).slice(11, 19);
+        }
+
+        function dateTimeShort(value) {
+            if (!value) return '-';
+            const date = new Date(String(value).replace(' ', 'T'));
+            if (!Number.isNaN(date.getTime())) {
+                return date.toLocaleString('zh-TW', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                });
+            }
+            const text = String(value);
+            return text.length >= 16 ? `${text.slice(5, 10)} ${text.slice(11, 16)}` : text;
+        }
+
+        function freshnessText(item) {
+            if (!item || !item.ok) return '-';
+            const lag = item.freshness_lag_seconds;
+            const age = item.cache_age_seconds;
+            const lagText = lag == null ? '-' : (lag === 0 ? '同步' : `落後 ${lag}s`);
+            return age == null ? lagText : `${lagText} / ${age}s前`;
+        }
+
+        function denomQuantity(cash, value) {
+            const row = cash && cash.usable_by_denomination ? cash.usable_by_denomination[String(value)] : null;
+            return row && row.quantity != null ? String(row.quantity) : '-';
+        }
+
+        function setRows(target, rows, colSpan, render) {
+            target.innerHTML = '';
+            if (!rows || rows.length === 0) {
+                target.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;color:var(--muted);padding:16px;">無資料</td></tr>`;
+                return;
+            }
+            for (const row of rows) { target.insertAdjacentHTML('beforeend', render(row)); }
+        }
+
+        function setPill(target, ok, text, tone) {
+            target.textContent = text;
+            const isStopped = text === 'stopped';
+            target.classList.toggle('ok', Boolean(ok));
+            target.classList.toggle('warn', !ok && tone !== 'danger' && !isStopped);
+            target.classList.toggle('danger', tone === 'danger');
+            target.classList.toggle('neutral', isStopped);
+        }
+
+        function serviceTitle(service, extra = '') {
+            if (!service) return '';
+            return [
+                `pid=${service.main_pid || '-'}`,
+                `state=${service.active || '-'}/${service.sub_state || '-'}`,
+                `started=${service.started_at || '-'}`,
+                extra,
+            ].filter(Boolean).join(' | ');
+        }
+
+        function temperatureComfortView(value) {
+            const raw = String(value || '').trim();
+            const code = raw.toUpperCase().replace(/[\s-]+/g, '_');
+            const labels = {
+                NORMAL: { text: '溫度正常', ok: true },
+                OK: { text: '溫度正常', ok: true },
+                HOT: { text: '溫度偏高', ok: false, tone: 'danger' },
+                HIGH: { text: '溫度偏高', ok: false, tone: 'danger' },
+                COLD: { text: '溫度偏低', ok: false },
+                LOW: { text: '溫度偏低', ok: false },
+                CONDENSATION_RISK: { text: '出風口結露風險', ok: false, tone: 'danger' },
+                DEW_POINT_RISK: { text: '出風口結露風險', ok: false, tone: 'danger' },
+                SUSTAINED_HOT: { text: '持續偏高', ok: false, tone: 'danger' },
+                PERSISTENT_HOT: { text: '持續偏高', ok: false, tone: 'danger' },
+                CONTINUOUS_HOT: { text: '持續偏高', ok: false, tone: 'danger' },
+                SUSTAINED_HIGH: { text: '持續偏高', ok: false, tone: 'danger' },
+                PERSISTENT_HIGH: { text: '持續偏高', ok: false, tone: 'danger' },
+                CONTINUOUS_HIGH: { text: '持續偏高', ok: false, tone: 'danger' },
+                SUSTAINED_COLD: { text: '持續偏低', ok: false },
+                PERSISTENT_COLD: { text: '持續偏低', ok: false },
+                CONTINUOUS_COLD: { text: '持續偏低', ok: false },
+                SUSTAINED_LOW: { text: '持續偏低', ok: false },
+                PERSISTENT_LOW: { text: '持續偏低', ok: false },
+                CONTINUOUS_LOW: { text: '持續偏低', ok: false },
+            };
+            if (labels[code]) return { ...labels[code], raw };
+            return { text: raw || '-', ok: false, raw };
+        }
+
+        function setControlButton(button, active, enabled = true) {
+            if (!button) return;
+            button.disabled = !enabled;
+            button.dataset.nextAction = active ? 'stop' : 'start';
+            button.classList.toggle('danger', Boolean(active) && !button.classList.contains('service-switch'));
+            button.classList.toggle('is-on', Boolean(active));
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+            button.title = enabled ? (active ? '點擊停止' : '點擊啟動') : '樹莓派 offline';
+        }
+
+        function renderFaultCodes(cashException) {
+            const data = cashException && cashException.cash_exception ? cashException.cash_exception : {};
+            const total = Number(data.notifications_today || 0);
+            const summary = Array.isArray(data.notification_summary) ? data.notification_summary : [];
+            ids.faultCodeBox.classList.toggle('is-active', total > 0);
+            ids.faultCodeTotal.textContent = total > 0 ? `${total} 次` : '-';
+            ids.faultCodeList.replaceChildren();
+            if (total <= 0) return;
+            for (const item of summary.slice(0, 6)) {
+                const row = document.createElement('div');
+                row.className = 'fault-code-item';
+                const label = document.createElement('span');
+                label.textContent = `${item.code || '-'} ${item.short_message || '-'}`;
+                const count = document.createElement('strong');
+                count.textContent = `${item.count || 0} 次`;
+                row.append(label, count);
+                ids.faultCodeList.appendChild(row);
+            }
+        }
+
+        function setPiOfflineState() {
+            ids.piHost.textContent = 'offline';
+            ids.piUptime.textContent = '-';
+            ids.piCpuTemp.textContent = '-';
+            ids.piMemory.textContent = '-';
+            setPill(ids.playerService, false, 'stopped');
+            setPill(ids.tempService, false, 'stopped');
+            setControlButton(ids.playerToggle, false, false);
+            setControlButton(ids.tempToggle, false, false);
+            setPill(ids.audioAvailable, false, 'offline');
+            setAudioControlsEnabled(false);
+            ids.audioVolume.textContent = '-';
+            ids.audioMuted.textContent = '-';
+            ids.audioVolumeSlider.value = 50;
+            setPill(ids.tempConnection, false, 'offline');
+            setPill(ids.tempComfort, false, '-');
+            ids.tempEma.textContent = '-';
+            setRows(ids.temperatureSensors, [], 5, () => '');
+        }
+
+        function showConfirmDialog(title, message, okText = '執行') {
+            return new Promise(resolve => {
+                ids.confirmTitle.textContent = title;
+                ids.confirmMessage.textContent = message;
+                ids.confirmOk.textContent = okText;
+                ids.confirmDialog.hidden = false;
+
+                const close = result => {
+                    ids.confirmDialog.hidden = true;
+                    ids.confirmOk.removeEventListener('click', onOk);
+                    ids.confirmCancel.removeEventListener('click', onCancel);
+                    ids.confirmDialog.removeEventListener('click', onBackdrop);
+                    document.removeEventListener('keydown', onKey);
+                    resolve(result);
+                };
+                const onOk = () => close(true);
+                const onCancel = () => close(false);
+                const onBackdrop = event => {
+                    if (event.target === ids.confirmDialog) close(false);
+                };
+                const onKey = event => {
+                    if (event.key === 'Escape') close(false);
+                    if (event.key === 'Enter') close(true);
+                };
+
+                ids.confirmOk.addEventListener('click', onOk);
+                ids.confirmCancel.addEventListener('click', onCancel);
+                ids.confirmDialog.addEventListener('click', onBackdrop);
+                document.addEventListener('keydown', onKey);
+                ids.confirmOk.focus();
+            });
+        }
+
+        function setupServiceLogPills() {
+            const targets = {
+                rp5: ids.rp5Service,
+                kitchen_dc: ids.kitchenDcService,
+                cash_exception: ids.cashExceptionService,
+                cashbox_estimator: ids.cashboxEstimatorService,
+                player: ids.playerService,
+                temperature: ids.tempService,
+            };
+
+            Object.entries(targets).forEach(([service, target]) => {
+                if (!target) return;
+                target.dataset.logService = service;
+                target.tabIndex = 0;
+                target.setAttribute('role', 'button');
+                target.setAttribute('aria-label', `查看${LOG_SERVICE_LABELS[service] || service}即時 log`);
+            });
+
+            document.addEventListener('click', event => {
+                const pill = event.target.closest('.pill[data-log-service]');
+                if (!pill) return;
+                openLogDialog(pill.dataset.logService);
+            });
+            document.addEventListener('keydown', event => {
+                const pill = event.target.closest && event.target.closest('.pill[data-log-service]');
+                if (!pill || !['Enter', ' '].includes(event.key)) return;
+                event.preventDefault();
+                openLogDialog(pill.dataset.logService);
+            });
+        }
+
+        function scheduleLogRefresh() {
+            if (logRefreshTimer) clearInterval(logRefreshTimer);
+            logRefreshTimer = null;
+            if (!currentLogService || !logAutoRefresh) return;
+            logRefreshTimer = setInterval(() => fetchServiceLog(currentLogService, false), 3000);
+        }
+
+        function closeLogDialog() {
+            currentLogService = null;
+            ids.logDialog.hidden = true;
+            if (logRefreshTimer) clearInterval(logRefreshTimer);
+            logRefreshTimer = null;
+        }
+
+        async function fetchServiceLog(service, showLoading = true) {
+            const requestSeq = ++logRequestSeq;
+            if (showLoading) ids.logContent.textContent = '讀取中...';
+            try {
+                const response = await fetch(`/api/logs/${encodeURIComponent(service)}?lines=180`, { cache: 'no-store' });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.ok) throw new Error(data.error || `log 讀取失敗 (${response.status})`);
+                if (requestSeq !== logRequestSeq || service !== currentLogService) return;
+                const label = LOG_SERVICE_LABELS[service] || data.label || service;
+                ids.logTitle.textContent = `${label} 即時 log`;
+                ids.logMeta.textContent = `${new Date(data.generated_at).toLocaleTimeString('zh-TW', { hour12: false })} · ${data.source || '-'}`;
+                ids.logContent.textContent = data.content || '沒有 log 內容';
+                ids.logContent.scrollTop = ids.logContent.scrollHeight;
+            } catch (error) {
+                if (requestSeq !== logRequestSeq || service !== currentLogService) return;
+                ids.logMeta.textContent = error.message;
+                ids.logContent.textContent = 'log 讀取失敗';
+            }
+        }
+
+        function openLogDialog(service) {
+            if (!service) return;
+            currentLogService = service;
+            logAutoRefresh = true;
+            ids.logAuto.textContent = '暫停';
+            ids.logTitle.textContent = `${LOG_SERVICE_LABELS[service] || service} 即時 log`;
+            ids.logMeta.textContent = '-';
+            ids.logDialog.hidden = false;
+            fetchServiceLog(service, true);
+            scheduleLogRefresh();
+        }
+
+        function setupLogDialog() {
+            ids.logRefresh.addEventListener('click', () => {
+                if (currentLogService) fetchServiceLog(currentLogService, true);
+            });
+            ids.logAuto.addEventListener('click', () => {
+                logAutoRefresh = !logAutoRefresh;
+                ids.logAuto.textContent = logAutoRefresh ? '暫停' : '繼續';
+                scheduleLogRefresh();
+            });
+            ids.logClose.addEventListener('click', closeLogDialog);
+            ids.logDialog.addEventListener('click', event => {
+                if (event.target === ids.logDialog) closeLogDialog();
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !ids.logDialog.hidden) closeLogDialog();
+            });
+        }
+
+        async function postControl(url) {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ confirm: true }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.ok) {
+                throw new Error(data.error || `控制指令失敗 (${response.status})`);
+            }
+            return data;
+        }
+
+        async function runControl(button, label, url, warning) {
+            const confirmed = await showConfirmDialog(label, `${warning || '確定要執行'}。`, label.includes('重啟') ? '重啟' : '確認');
+            if (!confirmed) return;
+            const oldText = button.textContent;
+            const isSwitch = button.classList.contains('service-switch');
+            const isIcon = button.classList.contains('reboot-btn');
+            button.disabled = true;
+            button.classList.toggle('is-busy', true);
+            if (!isSwitch && !isIcon) button.textContent = '處理';
+            try {
+                await postControl(url);
+                ids.status.textContent = `${label} 已送出`;
+                if (button.dataset.control === 'reboot-pi') setPiOfflineState();
+                setTimeout(refresh, 1200);
+            } catch (error) {
+                alert(error.message);
+                ids.status.textContent = `${label} 失敗`;
+            } finally {
+                button.disabled = false;
+                button.classList.toggle('is-busy', false);
+                if (!isSwitch && !isIcon) button.textContent = oldText;
+            }
+        }
+
+        function setupControls() {
+            document.querySelectorAll('[data-control]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const control = button.dataset.control;
+                    const action = button.dataset.nextAction;
+                    const map = {
+                        'toggle-rp5': {
+                            label: `營業回報${action === 'stop' ? '停止' : '啟動'}`,
+                            url: `/api/control/local-service/rp5/${action || 'start'}`,
+                            warning: action === 'stop' ? '確定要停止' : '確定要啟動',
+                        },
+                        'toggle-kitchen': {
+                            label: `廚房製作單${action === 'stop' ? '停止' : '啟動'}`,
+                            url: `/api/control/local-service/kitchen_dc/${action || 'start'}`,
+                            warning: action === 'stop' ? '確定要停止' : '確定要啟動',
+                        },
+                        'toggle-cash-exception': {
+                            label: `找零機故障碼監控${action === 'stop' ? '停止' : '啟動'}`,
+                            url: `/api/control/local-service/cash_exception/${action || 'start'}`,
+                            warning: action === 'stop' ? '確定要停止' : '確定要啟動',
+                        },
+                        'toggle-cashbox-estimator': {
+                            label: `錢箱推算${action === 'stop' ? '停止' : '啟動'}`,
+                            url: `/api/control/local-service/cashbox_estimator/${action || 'start'}`,
+                            warning: action === 'stop' ? '確定要停止' : '確定要啟動',
+                        },
+                        'toggle-player': {
+                            label: `播放器${action === 'stop' ? '停止' : '啟動'}`,
+                            url: `/api/control/pi-service/player/${action || 'start'}`,
+                            warning: action === 'stop' ? '確定要停止' : '確定要啟動',
+                        },
+                        'toggle-temp': {
+                            label: `溫度計${action === 'stop' ? '停止' : '啟動'}`,
+                            url: `/api/control/pi-service/temperature/${action || 'start'}`,
+                            warning: action === 'stop' ? '確定要停止' : '確定要啟動',
+                        },
+                        'reboot-server': {
+                            label: '本台伺服器重啟',
+                            url: '/api/control/reboot/server',
+                            warning: '這會讓本台 Windows 伺服器重新開機，確定要執行',
+                        },
+                        'reboot-pi': {
+                            label: '樹莓派重啟',
+                            url: '/api/control/reboot/pi',
+                            warning: '這會讓樹莓派重新開機，確定要執行',
+                        },
+                        'reboot-kiosk': {
+                            label: '售票機重啟',
+                            url: '/api/control/reboot/kiosk',
+                            warning: '這會呼叫售票機桌面的重啟捷徑，確定要執行',
+                        },
+                    };
+                    const config = map[control];
+                    if (!config) return;
+                    runControl(button, config.label, config.url, config.warning);
+                });
+            });
+        }
+
+        async function sendAudioPayload(payload) {
+            const response = await fetch(AUDIO_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || data.success === false) {
+                throw new Error(data.error || `聲霸指令失敗 (${response.status})`);
+            }
+            return data;
+        }
+
+        async function runAudioButton(button, label, payload, optimisticVolume = null) {
+            button.disabled = true;
+            try {
+                await sendAudioPayload(payload);
+                ids.status.textContent = `${label} 已送出`;
+                if (optimisticVolume != null) ids.audioVolume.textContent = `${optimisticVolume}%`;
+                setTimeout(refreshPi, 1200);
+            } catch (error) {
+                ids.status.textContent = `${label} 失敗`;
+                alert(error.message);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function setAudioControlsEnabled(enabled) {
+            document.querySelectorAll('[data-audio-volume], [data-audio-test]').forEach(button => {
+                button.disabled = !enabled;
+                button.title = enabled ? '' : '聲霸 offline';
+            });
+            ids.audioVolumeSlider.disabled = !enabled;
+            ids.audioVolumeSlider.title = enabled ? '' : '聲霸 offline';
+        }
+
+        function setupAudioControls() {
+            document.querySelectorAll('[data-audio-volume]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const volume = Number(button.dataset.audioVolume);
+                    runAudioButton(button, `聲霸音量 ${volume}%`, {
+                        type: 'volume',
+                        message: String(volume),
+                        volume,
+                    }, volume);
+                });
+            });
+
+            const tests = {
+                order: () => {
+                    const orderNo = String(Math.floor(Math.random() * 300) + 1).padStart(3, '0');
+                    return {
+                        label: `聲霸測試單號 ${orderNo}`,
+                        payload: {
+                            type: 'new_order',
+                            message: `單號 ${orderNo}`,
+                            order_no: orderNo,
+                        },
+                    };
+                },
+                offline: () => ({
+                    label: '聲霸離線語音測試',
+                    payload: {
+                        type: 'device_offline',
+                        message: '系統已中斷連線',
+                    },
+                }),
+                online: () => ({
+                    label: '聲霸上線語音測試',
+                    payload: {
+                        type: 'device_online',
+                        message: '系統已就緒',
+                    },
+                }),
+            };
+
+            document.querySelectorAll('[data-audio-test]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const config = tests[button.dataset.audioTest]?.();
+                    if (!config) return;
+                    runAudioButton(button, config.label, config.payload);
+                });
+            });
+
+            ids.audioVolumeSlider.addEventListener('input', () => {
+                ids.audioVolume.textContent = `${ids.audioVolumeSlider.value}%`;
+            });
+            ids.audioVolumeSlider.addEventListener('change', () => {
+                const volume = Number(ids.audioVolumeSlider.value);
+                runAudioButton(ids.audioVolumeSlider, `聲霸音量 ${volume}%`, {
+                    type: 'volume',
+                    message: String(volume),
+                    volume,
+                }, volume);
+            });
+
+            setAudioControlsEnabled(false);
+        }
+
+        const OFFLINE_SALES_MESSAGE = '售票機目前離線';
+
+        function friendlyErrorMessage(error, fallback) {
+            const message = error && error.message ? error.message : String(error || '');
+            if (!message) return fallback;
+            if (message === 'Failed to fetch' || /failed to fetch|networkerror|load failed|timeout|timed out|connect/i.test(message)) {
+                return fallback;
+            }
+            return message;
+        }
+
+        function showError(error, fallback) {
+            ids.errorPanel.hidden = false;
+            ids.errorPanel.querySelector('.panel-body').textContent = friendlyErrorMessage(error, fallback);
+        }
+
+        function kioskScreenshotTimeText(value, fallback = '-') {
+            if (!value) return fallback;
+            const date = new Date(value);
+            if (!Number.isFinite(date.getTime())) return fallback;
+            return date.toLocaleTimeString('zh-TW', { hour12: false });
+        }
+
+        function setKioskLiveScreenStatus(text) {
+            if (!ids.kioskLiveScreenStatus) return;
+            ids.kioskLiveScreenStatus.textContent = text;
+        }
+
+        function renderKioskLiveScreenIdleStatus() {
+            setKioskLiveScreenStatus(kioskScreenshotTimeText(kioskScreenLastUpdatedAt));
+        }
+
+        function kioskLatestScreenshotUrl() {
+            const key = kioskScreenLastUpdatedAt || Date.now();
+            return `/api/kiosk/screenshot/latest?view=${encodeURIComponent(key)}`;
+        }
+
+        function showKioskCachedScreenImage(metaText) {
+            if (!kioskScreenLastUpdatedAt) return false;
+            ids.kioskScreenMeta.textContent = metaText;
+            ids.kioskScreenPlaceholder.hidden = true;
+            ids.kioskScreenImage.src = kioskLatestScreenshotUrl();
+            ids.kioskScreenImage.hidden = false;
+            return true;
+        }
+
+        function kioskScreenLooksOffline(error) {
+            const message = error && error.message ? error.message : String(error || '');
+            return /timeout|timed out|failed to fetch|networkerror|load failed|502|bad gateway|不正確的閘道|連線|離線/i.test(message);
+        }
+
+        function kioskScreenErrorLabel(error) {
+            return kioskScreenLooksOffline(error) ? '售票機離線' : '更新失敗';
+        }
+
+        async function loadKioskLiveScreenStatus() {
+            if (!ids.kioskLiveScreenStatus) return;
+            try {
+                const response = await fetch('/api/kiosk/screenshot/status', { cache: 'no-store' });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.ok) throw new Error(data.error || '即時畫面狀態讀取失敗');
+                if (data.exists) {
+                    kioskScreenLastUpdatedAt = data.updated_at || null;
+                    renderKioskLiveScreenIdleStatus();
+                } else {
+                    kioskScreenLastUpdatedAt = null;
+                    renderKioskLiveScreenIdleStatus();
+                }
+            } catch (error) {
+                renderKioskLiveScreenIdleStatus();
+            }
+        }
+
+        function showKioskScreenLoading() {
+            if (!showKioskCachedScreenImage(`${kioskScreenshotTimeText(kioskScreenLastUpdatedAt)} · 更新中`)) {
+                ids.kioskScreenMeta.textContent = '每秒更新中...';
+                ids.kioskScreenImage.hidden = true;
+                ids.kioskScreenImage.removeAttribute('src');
+                ids.kioskScreenPlaceholder.hidden = false;
+                ids.kioskScreenPlaceholder.textContent = '讀取中...';
+            }
+            ids.kioskScreenDialog.hidden = false;
+            ids.kioskScreenClose.focus();
+        }
+
+        function showKioskScreenImage(imageUrl, updatedAt) {
+            kioskScreenLastUpdatedAt = updatedAt || kioskScreenLastUpdatedAt;
+            ids.kioskScreenMeta.textContent = `${kioskScreenshotTimeText(updatedAt)} · 每秒更新`;
+            ids.kioskScreenPlaceholder.hidden = true;
+            ids.kioskScreenImage.src = imageUrl;
+            ids.kioskScreenImage.hidden = false;
+        }
+
+        function showKioskScreenError(error, retryMs = KIOSK_SCREEN_OFFLINE_RETRY_MS) {
+            const label = kioskScreenErrorLabel(error);
+            const retryText = `${Math.round(retryMs / 1000)}秒後重試`;
+            if (!showKioskCachedScreenImage(`${label} · 最後截圖 ${kioskScreenshotTimeText(kioskScreenLastUpdatedAt)} · ${retryText}`)) {
+                ids.kioskScreenMeta.textContent = `${label} · ${retryText}`;
+                ids.kioskScreenImage.hidden = true;
+                ids.kioskScreenImage.removeAttribute('src');
+                ids.kioskScreenPlaceholder.hidden = false;
+                ids.kioskScreenPlaceholder.textContent = label;
+            }
+            ids.kioskScreenDialog.hidden = false;
+        }
+
+        function clearKioskScreenRefreshTimer() {
+            if (kioskScreenRefreshTimer) clearTimeout(kioskScreenRefreshTimer);
+            kioskScreenRefreshTimer = null;
+        }
+
+        function abortKioskScreenFetch() {
+            if (kioskScreenAbortController) {
+                kioskScreenAbortController.abort();
+                kioskScreenAbortController = null;
+            }
+        }
+
+        function kioskScreenIsActive(requestSeq) {
+            return requestSeq === kioskScreenRequestSeq && !ids.kioskScreenDialog.hidden;
+        }
+
+        function scheduleKioskScreenRefresh(requestSeq, delayMs = KIOSK_SCREEN_REFRESH_MS) {
+            clearKioskScreenRefreshTimer();
+            if (!kioskScreenIsActive(requestSeq)) return;
+            kioskScreenRefreshTimer = setTimeout(() => {
+                kioskScreenRefreshTimer = null;
+                refreshKioskScreenFrame(requestSeq, false);
+            }, Math.max(0, delayMs));
+        }
+
+        function closeKioskScreenDialog() {
+            kioskScreenRequestSeq += 1;
+            clearKioskScreenRefreshTimer();
+            abortKioskScreenFetch();
+            ids.kioskScreenDialog.hidden = true;
+            ids.kioskScreenImage.hidden = true;
+            ids.kioskScreenImage.removeAttribute('src');
+            ids.kioskScreenPlaceholder.hidden = false;
+            if (ids.kioskLiveScreen) ids.kioskLiveScreen.setAttribute('aria-disabled', 'false');
+            renderKioskLiveScreenIdleStatus();
+            if (ids.kioskLiveScreen) ids.kioskLiveScreen.focus();
+        }
+
+        async function refreshKioskScreenFrame(requestSeq, showInitialLoading) {
+            if (!kioskScreenIsActive(requestSeq)) return;
+            const startedAt = Date.now();
+            const hasVisibleImage = !ids.kioskScreenImage.hidden && Boolean(ids.kioskScreenImage.getAttribute('src'));
+            let nextDelayMs = KIOSK_SCREEN_REFRESH_MS;
+            let delayFromCompletion = false;
+            const abortController = new AbortController();
+            kioskScreenAbortController = abortController;
+            ids.kioskLiveScreen.setAttribute('aria-disabled', 'true');
+            if (showInitialLoading) {
+                setKioskLiveScreenStatus('讀取中');
+            } else if (hasVisibleImage) {
+                setKioskLiveScreenStatus('更新中');
+            }
+            if (!showInitialLoading && hasVisibleImage) {
+                ids.kioskScreenMeta.textContent = `${kioskScreenshotTimeText(kioskScreenLastUpdatedAt)} · 更新中`;
+            }
+            try {
+                const response = await fetch('/api/kiosk/screenshot/refresh', {
+                    method: 'POST',
+                    cache: 'no-store',
+                    signal: abortController.signal,
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.ok) throw new Error(data.error || '即時畫面更新失敗');
+                if (!kioskScreenIsActive(requestSeq)) return;
+                const baseUrl = data.image_url || '/api/kiosk/screenshot/latest';
+                const imageUrl = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}view=${Date.now()}`;
+                kioskScreenLastUpdatedAt = data.updated_at || kioskScreenLastUpdatedAt;
+                setKioskLiveScreenStatus(kioskScreenshotTimeText(kioskScreenLastUpdatedAt));
+                ids.status.textContent = `即時畫面 ${ids.kioskLiveScreenStatus.textContent}`;
+                showKioskScreenImage(imageUrl, data.updated_at);
+            } catch (error) {
+                if (error && error.name === 'AbortError') return;
+                if (!kioskScreenIsActive(requestSeq)) return;
+                const label = kioskScreenErrorLabel(error);
+                nextDelayMs = KIOSK_SCREEN_OFFLINE_RETRY_MS;
+                delayFromCompletion = true;
+                setKioskLiveScreenStatus(label === '售票機離線' ? '離線' : '更新失敗');
+                ids.status.textContent = `即時畫面 ${label}`;
+                showKioskScreenError(error, nextDelayMs);
+            } finally {
+                if (kioskScreenAbortController === abortController) kioskScreenAbortController = null;
+                if (requestSeq === kioskScreenRequestSeq) ids.kioskLiveScreen.setAttribute('aria-disabled', 'false');
+                const delayMs = delayFromCompletion ? nextDelayMs : nextDelayMs - (Date.now() - startedAt);
+                scheduleKioskScreenRefresh(requestSeq, delayMs);
+            }
+        }
+
+        async function openKioskLiveScreen() {
+            if (!ids.kioskLiveScreen || ids.kioskLiveScreen.getAttribute('aria-disabled') === 'true') return;
+            clearKioskScreenRefreshTimer();
+            abortKioskScreenFetch();
+            const requestSeq = ++kioskScreenRequestSeq;
+            showKioskScreenLoading();
+            await refreshKioskScreenFrame(requestSeq, true);
+        }
+
+        function setupKioskLiveScreen() {
+            if (!ids.kioskLiveScreen) return;
+            ids.kioskLiveScreen.addEventListener('click', openKioskLiveScreen);
+            ids.kioskLiveScreen.addEventListener('keydown', event => {
+                if (!['Enter', ' '].includes(event.key)) return;
+                event.preventDefault();
+                openKioskLiveScreen();
+            });
+            ids.kioskScreenClose.addEventListener('click', closeKioskScreenDialog);
+            ids.kioskScreenDialog.addEventListener('click', event => {
+                if (event.target === ids.kioskScreenDialog) closeKioskScreenDialog();
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !ids.kioskScreenDialog.hidden) closeKioskScreenDialog();
+            });
+            loadKioskLiveScreenStatus();
+        }
+
+        function formatUptime(seconds) {
+            const total = Number(seconds || 0);
+            const days = Math.floor(total / 86400);
+            const hours = Math.floor((total % 86400) / 3600);
+            const minutes = Math.floor((total % 3600) / 60);
+            if (days > 0) return `${days}天 ${hours}時`;
+            if (hours > 0) return `${hours}時 ${minutes}分`;
+            return `${minutes}分`;
+        }
+
+        function normalizeHistory(history, bucketMs = null) {
+            const points = (Array.isArray(history) ? history : [])
+                .map(point => {
+                    const t = Number(point && point.t);
+                    if (!Number.isFinite(t)) return null;
+                    const normalizedT = bucketMs ? Math.floor(t / bucketMs) * bucketMs : t;
+                    return { ...point, t: normalizedT };
+                })
+                .filter(Boolean)
+                .sort((a, b) => a.t - b.t);
+            if (!bucketMs) return points;
+            const byTime = new Map();
+            for (const point of points) byTime.set(point.t, point);
+            return Array.from(byTime.values()).sort((a, b) => a.t - b.t);
+        }
+
+        function updateHistory(key, point, options = {}) {
+            const bucketMs = options.bucketMs || null;
+            const history = normalizeHistory(loadJson(key, []), bucketMs);
+            const nextPoint = { ...point };
+            if (bucketMs) nextPoint.t = Math.floor(Number(nextPoint.t) / bucketMs) * bucketMs;
+            history.push(nextPoint);
+            const normalized = normalizeHistory(history, bucketMs);
+            while (normalized.length > (options.limit || HISTORY_LIMIT)) normalized.shift();
+            saveJson(key, normalized);
+            return normalized;
+        }
+
+        function replaceHistory(key, points, options = {}) {
+            const normalized = normalizeHistory(points, options.bucketMs || null);
+            while (normalized.length > (options.limit || HISTORY_LIMIT)) normalized.shift();
+            saveJson(key, normalized);
+            return normalized;
+        }
+
+        function floorTime(value, stepMs) {
+            const time = Number(value);
+            return Math.floor(time / stepMs) * stepMs;
+        }
+
+        function parseBucketTime(value, businessDate = null) {
+            if (!value) return null;
+            const parts = String(value).split(':').map(Number);
+            if (parts.length < 2 || parts.some(part => !Number.isFinite(part))) return null;
+            const date = businessDate ? new Date(`${businessDate}T00:00:00`) : new Date();
+            if (Number.isNaN(date.getTime())) return null;
+            date.setHours(parts[0], parts[1], 0, 0);
+            return date.getTime();
+        }
+
+        function formatAxisMinute(time) {
+            return new Date(time).toLocaleTimeString('zh-TW', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+            });
+        }
+
+        function expandTimeSlots(points, stepMs, minSpanMs, now = Date.now()) {
+            const source = (Array.isArray(points) ? points : [])
+                .map(point => {
+                    const t = Number(point && point.t);
+                    return Number.isFinite(t) ? { ...point, t: floorTime(t, stepMs) } : null;
+                })
+                .filter(Boolean)
+                .sort((a, b) => a.t - b.t);
+            const latest = floorTime(now, stepMs);
+            const first = latest - minSpanMs;
+            const byTime = new Map(source.map(point => [point.t, point]));
+            const slots = [];
+            for (let t = floorTime(first, stepMs); t <= latest; t += stepMs) {
+                slots.push(byTime.get(t) || { t });
+            }
+            return slots;
+        }
+
+        function resizeCanvas(canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const ratio = window.devicePixelRatio || 1;
+            canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+            canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            return { ctx, width: rect.width, height: rect.height };
+        }
+
+        function formatChartTime(value) {
+            return new Date(value).toLocaleTimeString('zh-TW', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+            });
+        }
+
+        function drawRoundRect(ctx, x, y, width, height, radius) {
+            const r = Math.min(radius, width / 2, height / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + width - r, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+            ctx.lineTo(x + width, y + height - r);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+            ctx.lineTo(x + r, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        function drawEvenAxisLabels(ctx, labels, left, right, y, preferredCount) {
+            const cleanLabels = (labels || []).filter(label => label != null && label !== '');
+            if (!cleanLabels.length) return;
+            const count = Math.min(cleanLabels.length, Math.max(2, preferredCount || 3));
+            const indexes = Array.from({ length: count }, (_, i) =>
+                Math.round((cleanLabels.length - 1) * (i / Math.max(1, count - 1)))
+            ).filter((index, i, list) => index === 0 || index !== list[i - 1]);
+            const span = right - left;
+            const occupied = [];
+            for (let slot = 0; slot < indexes.length; slot++) {
+                const index = indexes[slot];
+                const label = cleanLabels[index];
+                const labelWidth = ctx.measureText(label).width;
+                const x = left + span * (slot / Math.max(1, indexes.length - 1));
+                const textX = Math.max(left + labelWidth / 2, Math.min(right - labelWidth / 2, x));
+                const box = { left: textX - labelWidth / 2 - 10, right: textX + labelWidth / 2 + 10 };
+                if (occupied.some(item => box.left < item.right && box.right > item.left)) continue;
+                occupied.push(box);
+                ctx.fillText(label, textX, y);
+            }
+        }
+
+        function drawRiver(canvas, history, series, options = {}) {
+            const { ctx, width, height } = resizeCanvas(canvas);
+            ctx.clearRect(0, 0, width, height);
+            
+            ctx.fillStyle = 'rgba(7, 10, 15, 0.2)';
+            ctx.fillRect(0, 0, width, height);
+            
+            if (!history || history.length < 2) {
+                ctx.fillStyle = '#64748b';
+                ctx.font = '13px system-ui, sans-serif';
+                ctx.fillText('累積資料中...', 16, 28);
+                return;
+            }
+
+            const padL = 58;
+            const padR = 18;
+            const padT = 16;
+            const padB = 34;
+            const usableW = width - padL - padR;
+            const usableH = height - padT - padB;
+            const baseline = height - padB;
+            const readSeriesValue = (point, s) => {
+                const value = point ? point[s.key] : null;
+                const number = Number(value);
+                return value == null || !Number.isFinite(number) ? null : number;
+            };
+            const rawValues = history.flatMap(point => series.map(s => {
+                const value = readSeriesValue(point, s);
+                return value == null ? null : value * (s.scale || 1);
+            })).filter(value => value != null);
+            const hasRawValues = rawValues.length > 0;
+            const min = Number.isFinite(options.min) ? options.min : 0;
+            const max = (Number.isFinite(options.max) ? options.max : null) ?? Math.max(1, ...rawValues);
+            const range = Math.max(1, max - min);
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.075)';
+            ctx.lineWidth = 1;
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '13px tabular-nums, system-ui, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i < 5; i++) {
+                const y = padT + usableH * i / 4;
+                const value = max - range * i / 4;
+                ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(width - padR, y); ctx.stroke();
+                const label = Number.isInteger(value) ? String(Math.round(value)) : value.toFixed(1);
+                ctx.fillText(`${label}${options.unit || ''}`, padL - 8, y);
+            }
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'alphabetic';
+            ctx.font = '13px tabular-nums, system-ui, sans-serif';
+            const xForPoint = (point, fallbackIndex = 0) => {
+                return padL + usableW * (fallbackIndex / Math.max(1, history.length - 1));
+            };
+            const axisLabels = history.map(point =>
+                new Date(point.t).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })
+            );
+            drawEvenAxisLabels(ctx, axisLabels, padL, width - padR, height - 8, width < 460 ? 3 : 5);
+            if (!hasRawValues) {
+                ctx.fillStyle = '#64748b';
+                ctx.font = '13px system-ui, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('無資料', padL, 28);
+            }
+
+            const hover = RIVER_HOVER.get(canvas);
+            const hoverIndex = hover && Number.isInteger(hover.index) ? Math.max(0, Math.min(history.length - 1, hover.index)) : null;
+            const hoverPoint = hoverIndex == null ? null : history[hoverIndex];
+            const hoverX = hoverIndex == null ? null : xForPoint(history[hoverIndex], hoverIndex);
+            canvas._riverHit = { padL, padR, padT, padB, usableW, usableH, baseline, historyLength: history.length };
+            canvas._riverSeriesPoints = [];
+
+            series.forEach((s, index) => {
+                const scale = s.scale || 1;
+                const points = history.map((point, i) => {
+                    const x = xForPoint(point, i);
+                    const raw = readSeriesValue(point, s);
+                    if (raw == null) return { x, y: null, raw: null };
+                    const value = raw * scale;
+                    const wave = options.wave ? Math.sin(i / 6 + index) * options.wave : 0;
+                    const clamped = Math.max(min, Math.min(max, value));
+                    const y = baseline - ((clamped - min) / range) * usableH + wave;
+                    return { x, y, raw };
+                });
+                if (!canvas._riverSeriesPoints) canvas._riverSeriesPoints = [];
+                canvas._riverSeriesPoints[index] = points;
+                const segments = [];
+                let segment = [];
+                for (const point of points) {
+                    if (point.y == null) {
+                        if (segment.length) segments.push(segment);
+                        segment = [];
+                        continue;
+                    }
+                    segment.push(point);
+                }
+                if (segment.length) segments.push(segment);
+
+                const gradient = ctx.createLinearGradient(0, padT, 0, baseline);
+                gradient.addColorStop(0, s.color.replace(/0\.\d+/g, '0.08'));
+                gradient.addColorStop(1, 'rgba(11, 15, 23, 0)');
+                
+                ctx.fillStyle = gradient;
+                segments.forEach(points => {
+                    if (points.length < 2) return;
+                    ctx.beginPath();
+                    ctx.moveTo(points[0].x, baseline);
+                    points.forEach((p, i) => {
+                        if (i === 0) { ctx.lineTo(p.x, p.y); return; }
+                        const prev = points[i - 1]; const cx = (prev.x + p.x) / 2;
+                        ctx.bezierCurveTo(cx, prev.y, cx, p.y, p.x, p.y);
+                    });
+                    ctx.lineTo(points[points.length - 1].x, baseline); ctx.closePath(); ctx.fill();
+
+                    ctx.strokeStyle = s.stroke || s.color; ctx.lineWidth = 2; ctx.beginPath();
+                    points.forEach((p, i) => {
+                        if (i === 0) { ctx.moveTo(p.x, p.y); return; }
+                        const prev = points[i - 1]; const cx = (prev.x + p.x) / 2;
+                        ctx.bezierCurveTo(cx, prev.y, cx, p.y, p.x, p.y);
+                    });
+                    ctx.stroke();
+                });
+            });
+
+            if (hoverPoint && hoverX != null) {
+                const activeValues = series.map((s, index) => {
+                    const raw = readSeriesValue(hoverPoint, s);
+                    if (raw == null) return null;
+                    const scale = s.scale || 1;
+                    const scaled = raw * scale;
+                    const clamped = Math.max(min, Math.min(max, scaled));
+                    const y = baseline - ((clamped - min) / range) * usableH;
+                    return { ...s, raw, scaled, y, point: canvas._riverSeriesPoints[index][hoverIndex] };
+                }).filter(Boolean);
+                const nearest = activeValues.reduce((best, item) => {
+                    if (!best) return item;
+                    return Math.abs(item.y - (hover.y ?? item.y)) < Math.abs(best.y - (hover.y ?? best.y)) ? item : best;
+                }, null);
+                const lineY = nearest ? nearest.y : padT + usableH / 2;
+
+                ctx.save();
+                ctx.strokeStyle = 'rgba(226, 232, 240, 0.58)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath(); ctx.moveTo(hoverX, padT); ctx.lineTo(hoverX, baseline); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(padL, lineY); ctx.lineTo(width - padR, lineY); ctx.stroke();
+                ctx.setLineDash([]);
+
+                activeValues.forEach(item => {
+                    ctx.fillStyle = item.stroke || item.color;
+                    ctx.strokeStyle = 'rgba(7, 10, 15, 0.95)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(hoverX, item.point ? item.point.y : item.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                });
+
+                const tooltipLines = [
+                    formatChartTime(hoverPoint.t),
+                    ...(activeValues.length ? activeValues.map(item => {
+                        const label = item.label || item.key;
+                        const value = Number.isInteger(item.raw) ? String(item.raw) : item.raw.toFixed(1);
+                        return `${label}: ${value}${options.unit || ''}`;
+                    }) : ['無資料']),
+                ];
+                ctx.font = '14px system-ui, sans-serif';
+                const tooltipW = Math.max(...tooltipLines.map(line => ctx.measureText(line).width)) + 18;
+                const tooltipH = tooltipLines.length * 19 + 12;
+                let tx = hoverX + 12;
+                let ty = Math.max(8, lineY - tooltipH - 10);
+                if (tx + tooltipW > width - 8) tx = hoverX - tooltipW - 12;
+                if (ty + tooltipH > height - 8) ty = height - tooltipH - 8;
+                drawRoundRect(ctx, tx, ty, tooltipW, tooltipH, 7);
+                ctx.fillStyle = 'rgba(7, 10, 15, 0.92)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(148, 163, 184, 0.32)';
+                ctx.stroke();
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                tooltipLines.forEach((line, i) => {
+                    ctx.fillStyle = i === 0 ? '#e2e8f0' : '#cbd5e1';
+                    ctx.fillText(line, tx + 9, ty + 7 + i * 19);
+                });
+                ctx.restore();
+            }
+        }
+
+        function getScaleOptions(kind) {
+            if (kind === 'sales') {
+                const value = ids.salesScale.value;
+                if (value === 'auto') return { unit: '' };
+                return { min: 0, max: Number(value), unit: '' };
+            }
+            const value = ids.tempScale.value;
+            if (value === 'auto') return { unit: '°' };
+            const [min, max] = value.split('-').map(Number);
+            return { min, max, unit: '°' };
+        }
+
+        function drawSalesHistory() {
+            drawSalesBuckets(ids.salesRiver, loadJson(SALES_HISTORY_KEY, []), getScaleOptions('sales'));
+        }
+
+        function normalizeSalesBuckets(buckets) {
+            const rows = (Array.isArray(buckets) ? buckets : [])
+                .map(item => {
+                    const t = parseBucketTime(item.bucket_start, item.business_date);
+                    return t == null ? null : { ...item, t: floorTime(t, SALES_BUCKET_MS) };
+                })
+                .filter(Boolean)
+                .sort((a, b) => a.t - b.t);
+            const current = floorTime(Date.now(), SALES_BUCKET_MS);
+            const latest = current;
+            const first = latest - MIN_CHART_SPAN_MS;
+            const byTime = new Map(rows.map(item => [item.t, item]));
+            const slots = [];
+            for (let t = floorTime(first, SALES_BUCKET_MS); t <= latest; t += SALES_BUCKET_MS) {
+                const row = byTime.get(t);
+                slots.push(row || {
+                    t,
+                    bucket_start: formatAxisMinute(t),
+                    bucket_end: formatAxisMinute(t + SALES_BUCKET_MS),
+                    order_count: 0,
+                    payment_amount: 0,
+                    change_amount: 0,
+                    net_sales_amount: 0,
+                    bowl_count: 0,
+                });
+            }
+            return slots;
+        }
+
+        function drawSalesBuckets(canvas, buckets, options = {}) {
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            const width = Math.max(1, Math.round(rect.width * dpr));
+            const height = Math.max(1, Math.round(rect.height * dpr));
+            if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            const padL = 46, padR = 12, padT = 14, padB = 34;
+            const usableW = Math.max(1, rect.width - padL - padR);
+            const usableH = Math.max(1, rect.height - padT - padB);
+            const baseline = padT + usableH;
+            const data = normalizeSalesBuckets((Array.isArray(buckets) ? buckets : []).map(bucket => ({
+                ...bucket,
+                business_date: bucket.business_date || options.businessDate || null,
+            })));
+            const salesValue = item => Number(item.net_sales_amount ?? item.payment_amount ?? 0);
+            const maxValue = options.max || Math.max(1000, ...data.map(salesValue));
+            const niceMax = options.max || Math.ceil(maxValue / 1000) * 1000;
+            const hover = RIVER_HOVER.get(canvas);
+
+            ctx.save();
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+            ctx.lineWidth = 1;
+            ctx.fillStyle = '#64748b';
+            ctx.font = '12px system-ui, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i <= 4; i++) {
+                const y = padT + (usableH * i / 4);
+                const value = niceMax - niceMax * i / 4;
+                ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(rect.width - padR, y); ctx.stroke();
+                ctx.fillText(value >= 1000 ? `${Math.round(value / 1000)}k` : String(Math.round(value)), padL - 7, y);
+            }
+            ctx.restore();
+
+            if (!data.length) {
+                ctx.fillStyle = '#64748b';
+                ctx.font = '15px system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('尚無分時資料', rect.width / 2, rect.height / 2);
+                canvas._barHit = null;
+                return;
+            }
+
+            const gap = Math.min(5, usableW / data.length * 0.22);
+            const barW = Math.max(3, usableW / data.length - gap);
+            canvas._barHit = { padL, padR, padT, padB, usableW, usableH, count: data.length };
+            canvas._barBuckets = data;
+
+            data.forEach((item, index) => {
+                const value = salesValue(item);
+                const x = padL + index * (usableW / data.length) + gap / 2;
+                const barH = Math.max(value > 0 ? 2 : 0, Math.round((value / niceMax) * usableH));
+                const y = baseline - barH;
+                const isHover = hover && hover.index === index;
+                const gradient = ctx.createLinearGradient(0, y, 0, baseline);
+                gradient.addColorStop(0, isHover ? 'rgba(125, 211, 252, 0.95)' : 'rgba(14, 165, 233, 0.82)');
+                gradient.addColorStop(1, 'rgba(14, 165, 233, 0.24)');
+                ctx.fillStyle = gradient;
+                drawRoundRect(ctx, x, y, barW, barH, 4);
+                ctx.fill();
+
+            });
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = '11px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            drawEvenAxisLabels(
+                ctx,
+                data.map(item => item.bucket_start),
+                padL,
+                rect.width - padR,
+                baseline + 7,
+                rect.width < 460 ? 3 : Math.min(6, Math.floor(usableW / 70))
+            );
+
+            ctx.strokeStyle = 'rgba(226, 232, 240, 0.22)';
+            ctx.beginPath(); ctx.moveTo(padL, baseline); ctx.lineTo(rect.width - padR, baseline); ctx.stroke();
+
+            if (hover && hover.index >= 0 && hover.index < data.length) {
+                const item = data[hover.index];
+                const x = padL + hover.index * (usableW / data.length) + gap / 2 + barW / 2;
+                const value = salesValue(item);
+                const y = baseline - Math.max(value > 0 ? 2 : 0, Math.round((value / niceMax) * usableH));
+                ctx.save();
+                ctx.strokeStyle = 'rgba(226, 232, 240, 0.42)';
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, baseline); ctx.stroke();
+                ctx.setLineDash([]);
+                const lines = [
+                    `${item.bucket_start}-${String(item.bucket_end || '').slice(0, 5)}`,
+                    `實收 ${money(salesValue(item))}`,
+                    `碗數 ${Math.round(Number(item.bowl_count || 0))}`,
+                    `單數 ${Math.round(Number(item.order_count || 0))}`,
+                ];
+                ctx.font = '14px system-ui, sans-serif';
+                const tooltipW = Math.max(...lines.map(line => ctx.measureText(line).width)) + 18;
+                const tooltipH = lines.length * 19 + 12;
+                let tx = x + 12;
+                let ty = Math.max(8, y - tooltipH - 10);
+                if (tx + tooltipW > rect.width - 8) tx = x - tooltipW - 12;
+                if (ty + tooltipH > rect.height - 8) ty = rect.height - tooltipH - 8;
+                drawRoundRect(ctx, tx, ty, tooltipW, tooltipH, 7);
+                ctx.fillStyle = 'rgba(7, 10, 15, 0.92)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(148, 163, 184, 0.32)';
+                ctx.stroke();
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                lines.forEach((line, i) => {
+                    ctx.fillStyle = i === 0 ? '#e2e8f0' : '#cbd5e1';
+                    ctx.fillText(line, tx + 9, ty + 7 + i * 19);
+                });
+                ctx.restore();
+            }
+        }
+
+        function drawTempHistory() {
+            const history = expandTimeSlots(
+                normalizeHistory(loadJson(TEMP_HISTORY_KEY, []), TEMP_HISTORY_BUCKET_MS),
+                TEMP_HISTORY_BUCKET_MS,
+                MIN_CHART_SPAN_MS
+            );
+            saveJson(TEMP_HISTORY_KEY, history);
+            drawRiver(ids.tempRiver, history, [
+                { key: '右六', label: '右六', color: 'rgba(14, 165, 233, 0.45)', stroke: '#0ea5e9' },
+                { key: '左四', label: '左四', color: 'rgba(16, 185, 129, 0.38)', stroke: '#10b981' },
+                { key: '廚房', label: '廚房', color: 'rgba(245, 158, 11, 0.38)', stroke: '#f59e0b' },
+            ], { ...getScaleOptions('temperature'), wave: 1.5 });
+        }
+
+        function setupRiverHover(canvas, redraw) {
+            const updateHover = (clientX, clientY) => {
+                if (canvas._barHit) {
+                    const hit = canvas._barHit;
+                    const rect = canvas.getBoundingClientRect();
+                    const x = clientX - rect.left;
+                    const y = clientY - rect.top;
+                    if (x < hit.padL || x > rect.width - hit.padR || y < hit.padT || y > rect.height - hit.padB) {
+                        if (RIVER_HOVER.has(canvas)) {
+                            RIVER_HOVER.delete(canvas);
+                            redraw();
+                        }
+                        return;
+                    }
+                    const index = Math.max(0, Math.min(hit.count - 1, Math.floor(((x - hit.padL) / hit.usableW) * hit.count)));
+                    const previous = RIVER_HOVER.get(canvas);
+                    if (!previous || previous.index !== index) {
+                        RIVER_HOVER.set(canvas, { index, y });
+                        redraw();
+                    }
+                    return;
+                }
+                const hit = canvas._riverHit;
+                if (!hit || hit.historyLength < 2) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+                if (x < hit.padL || x > rect.width - hit.padR || y < hit.padT || y > hit.baseline) {
+                    if (RIVER_HOVER.has(canvas)) {
+                        RIVER_HOVER.delete(canvas);
+                        redraw();
+                    }
+                    return;
+                }
+                const points = canvas._riverSeriesPoints && canvas._riverSeriesPoints[0] ? canvas._riverSeriesPoints[0] : [];
+                const nearest = points.reduce((best, point, index) => {
+                    const distance = Math.abs(point.x - x);
+                    return !best || distance < best.distance ? { index, distance } : best;
+                }, null);
+                const ratio = Math.max(0, Math.min(1, (x - hit.padL) / hit.usableW));
+                const index = nearest ? nearest.index : Math.round(ratio * (hit.historyLength - 1));
+                const previous = RIVER_HOVER.get(canvas);
+                if (!previous || previous.index !== index || Math.abs((previous.y || 0) - y) > 2) {
+                    RIVER_HOVER.set(canvas, { index, y });
+                    redraw();
+                }
+            };
+
+            const clearHover = () => {
+                if (!RIVER_HOVER.has(canvas)) return;
+                RIVER_HOVER.delete(canvas);
+                redraw();
+            };
+
+            canvas.addEventListener('mousemove', event => {
+                updateHover(event.clientX, event.clientY);
+            });
+
+            canvas.addEventListener('mouseleave', clearHover);
+
+            canvas.addEventListener('touchstart', event => {
+                if (!event.touches.length) return;
+                event.preventDefault();
+                updateHover(event.touches[0].clientX, event.touches[0].clientY);
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', event => {
+                if (!event.touches.length) return;
+                event.preventDefault();
+                updateHover(event.touches[0].clientX, event.touches[0].clientY);
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', clearHover);
+            canvas.addEventListener('touchcancel', clearHover);
+
+            canvas.addEventListener('pointerdown', event => {
+                if (event.pointerType === 'mouse') return;
+                updateHover(event.clientX, event.clientY);
+            });
+            canvas.addEventListener('pointermove', event => {
+                if (event.pointerType === 'mouse') return;
+                updateHover(event.clientX, event.clientY);
+            });
+        }
+
+        function applyPanelState() {
+            const panels = Array.from(ids.panelList.querySelectorAll('.panel[data-panel]'));
+            const savedOrder = loadJson(ORDER_KEY, []);
+            savedOrder.forEach(name => {
+                const panel = panels.find(item => item.dataset.panel === name);
+                if (panel) ids.panelList.appendChild(panel);
+            });
+
+            const collapsed = loadJson(COLLAPSE_KEY, {});
+            for (const panel of ids.panelList.querySelectorAll('.panel[data-panel]')) {
+                const shouldCollapse = Boolean(collapsed[panel.dataset.panel]);
+                panel.classList.toggle('collapsed', shouldCollapse);
+                const button = panel.querySelector('[data-collapse]');
+                if (button) button.textContent = shouldCollapse ? '⌄' : '⌃';
+            }
+        }
+
+        function savePanelOrder() {
+            saveJson(ORDER_KEY, Array.from(ids.panelList.querySelectorAll('.panel[data-panel]')).map(panel => panel.dataset.panel));
+        }
+
+        function setupPanels() {
+            applyPanelState();
+            let dragged = null;
+
+            ids.panelList.addEventListener('click', event => {
+                const button = event.target.closest('[data-collapse]');
+                if (!button) return;
+                const panel = button.closest('.panel');
+                panel.classList.toggle('collapsed');
+                button.textContent = panel.classList.contains('collapsed') ? '⌄' : '⌃';
+                const collapsed = loadJson(COLLAPSE_KEY, {});
+                collapsed[panel.dataset.panel] = panel.classList.contains('collapsed');
+                saveJson(COLLAPSE_KEY, collapsed);
+            });
+
+            // 桌面端拖曳
+            ids.panelList.addEventListener('dragstart', event => {
+                const panel = event.target.closest('.panel');
+                if (!panel) return; dragged = panel; panel.classList.add('dragging');
+                event.dataTransfer.effectAllowed = 'move';
+            });
+            ids.panelList.addEventListener('dragend', () => {
+                if (dragged) dragged.classList.remove('dragging'); dragged = null; savePanelOrder();
+            });
+            ids.panelList.addEventListener('dragover', event => {
+                event.preventDefault(); if (!dragged) return;
+                const siblings = Array.from(ids.panelList.querySelectorAll('.panel:not(.dragging)'));
+                const next = siblings.find(panel => event.clientY <= panel.getBoundingClientRect().top + panel.offsetHeight / 2);
+                ids.panelList.insertBefore(dragged, next || null);
+            });
+
+            // iPhone / 行動端觸控拖曳
+            let touchOffsetY = 0; let placeholder = null;
+            ids.panelList.addEventListener('touchstart', event => {
+                const dragMark = event.target.closest('.drag-mark');
+                if (!dragMark) return;
+                const panel = event.target.closest('.panel');
+                if (!panel) return;
+                dragged = panel;
+                const touch = event.touches[0]; const rect = panel.getBoundingClientRect();
+                touchOffsetY = touch.clientY - rect.top;
+
+                placeholder = document.createElement('div');
+                placeholder.style.height = `${rect.height}px`;
+                placeholder.style.border = '2px dashed var(--cyan)';
+                placeholder.style.borderRadius = '12px';
+                placeholder.style.marginBottom = '14px';
+                placeholder.style.background = 'rgba(14, 165, 233, 0.04)';
+                
+                panel.style.width = `${rect.width}px`; panel.style.position = 'fixed';
+                panel.style.top = `${rect.top}px`; panel.style.left = `${rect.left}px`;
+                panel.style.zIndex = '9999'; panel.style.pointerEvents = 'none';
+                panel.classList.add('touch-dragging');
+                panel.parentNode.insertBefore(placeholder, panel);
+                event.preventDefault();
+            }, { passive: false });
+
+            ids.panelList.addEventListener('touchmove', event => {
+                if (!dragged) return; event.preventDefault();
+                const touch = event.touches[0];
+                dragged.style.top = `${touch.clientY - touchOffsetY}px`;
+                const siblings = Array.from(ids.panelList.querySelectorAll('.panel:not(.touch-dragging):not(.dragging)'));
+                const next = siblings.find(panel => {
+                    const rect = panel.getBoundingClientRect();
+                    return touch.clientY <= rect.top + rect.height / 2;
+                });
+                ids.panelList.insertBefore(placeholder, next || null);
+            }, { passive: false });
+
+            ids.panelList.addEventListener('touchend', () => {
+                if (!dragged) return;
+                if (placeholder && placeholder.parentNode) {
+                    placeholder.parentNode.insertBefore(dragged, placeholder); placeholder.remove();
+                }
+                dragged.style.width = ''; dragged.style.position = ''; dragged.style.top = ''; dragged.style.left = ''; dragged.style.zIndex = ''; dragged.style.pointerEvents = '';
+                dragged.classList.remove('touch-dragging'); dragged = null; placeholder = null;
+                savePanelOrder(); drawSalesHistory(); drawTempHistory();
+            });
+        }
+
+        async function refreshPi() {
+            const response = await fetch('/api/pi/status', { cache: 'no-store' }).catch(()=>({json:async()=>({ok:false})}));
+            const data = await response.json();
+            if (!data.ok) {
+                setPiOfflineState();
+                return;
+            }
+
+            const pi = data.pi || {}; const services = data.services || {}; const audio = data.audio || {}; const temperature = data.temperature || {};
+            ids.piHost.textContent = pi.hostname || '-';
+            ids.piUptime.textContent = formatUptime(pi.uptime_seconds);
+            ids.piCpuTemp.textContent = pi.cpu_temperature == null ? '-' : `${pi.cpu_temperature}°C`;
+            ids.piMemory.textContent = pi.memory ? `${pi.memory.used_percent}%` : '-';
+            const playerHealth = data.player || {};
+            const playerText = services.player && services.player.ok
+                ? 'active'
+                : 'stopped';
+            setPill(ids.playerService, services.player && services.player.ok, playerText);
+            ids.playerService.title = serviceTitle(services.player, playerHealth.ok ? `queue=${playerHealth.queue_size}` : `player_api=${playerHealth.error || '-'}`);
+
+            const tempHeartbeat = services.temperature && services.temperature.heartbeat;
+            const tempAge = tempHeartbeat && tempHeartbeat.ok && tempHeartbeat.age_seconds != null ? `${tempHeartbeat.age_seconds}s` : null;
+            const tempText = services.temperature && services.temperature.ok
+                ? 'active'
+                : 'stopped';
+            setPill(ids.tempService, services.temperature && services.temperature.ok, tempText);
+            ids.tempService.title = serviceTitle(services.temperature, tempHeartbeat && tempHeartbeat.ok ? `heartbeat=${tempAge}` : `heartbeat=${tempHeartbeat && tempHeartbeat.error || '-'}`);
+            setControlButton(ids.playerToggle, services.player && services.player.ok);
+            setControlButton(ids.tempToggle, services.temperature && services.temperature.ok);
+            setPill(ids.audioAvailable, audio.available, audio.available ? 'online' : 'offline');
+            setAudioControlsEnabled(Boolean(audio.available));
+            ids.audioVolume.textContent = audio.volume == null ? '-' : `${audio.volume}%`;
+            if (audio.volume != null && !ids.audioVolumeSlider.disabled) ids.audioVolumeSlider.value = String(audio.volume);
+            ids.audioMuted.textContent = audio.muted == null ? '-' : (audio.muted ? 'yes' : 'no');
+            const tempConnection = String(temperature.connection || '').toUpperCase();
+            const tempConnectionText = tempConnection === 'OK' ? 'online' : (tempConnection === 'DEGRADED' ? 'partial' : 'offline');
+            setPill(ids.tempConnection, tempConnection === 'OK', tempConnectionText, tempConnection === 'OFFLINE' ? 'danger' : undefined);
+            const comfort = temperatureComfortView(temperature.comfort);
+            setPill(ids.tempComfort, comfort.ok, comfort.text, comfort.tone);
+            ids.tempComfort.title = comfort.raw ? `原始狀態：${comfort.raw}` : '';
+            ids.tempEma.textContent = temperature.ema && temperature.ema.temperature != null ? `${temperature.ema.temperature.toFixed(1)}°C / ${temperature.ema.humidity.toFixed(1)}%` : '-';
+
+            setRows(ids.temperatureSensors, temperature.sensors || [], 5, sensor => `
+                <tr>
+                    <td>${sensor.name || '-'}</td>
+                    <td class="number">${sensor.online ? `${sensor.temperature.toFixed(1)}°C` : (sensor.status || '離線')}</td>
+                    <td class="number">${sensor.online ? `${sensor.humidity}%` : '-'}</td>
+                    <td class="number">${sensor.online ? sensor.battery : '-'}</td>
+                    <td class="number">${sensor.online ? `${sensor.age_seconds}s前` : '-'}</td>
+                </tr>
+            `);
+
+            if (Array.isArray(data.temperature_history) && data.temperature_history.length) {
+                replaceHistory(TEMP_HISTORY_KEY, data.temperature_history, { bucketMs: TEMP_HISTORY_BUCKET_MS });
+            } else {
+                const tempPoint = { t: Date.now() };
+                for (const sensor of temperature.sensors || []) { if (sensor.online) tempPoint[sensor.name] = sensor.temperature; }
+                updateHistory(TEMP_HISTORY_KEY, tempPoint, { bucketMs: TEMP_HISTORY_BUCKET_MS });
+            }
+            drawTempHistory();
+        }
+
+        async function refreshServer() {
+            const response = await fetch('/api/server/status', { cache: 'no-store' }).catch(()=>({json:async()=>({ok:false})}));
+            const data = await response.json(); if (!data.ok) return;
+
+            const server = data.server || {}; const kiosk = data.kiosk || {}; const web = data.web_host || {}; const services = data.local_services || {};
+            ids.serverHost.textContent = server.hostname || '-';
+            ids.serverUptime.textContent = formatUptime(server.uptime_seconds);
+            ids.serverMemory.textContent = server.memory ? `${server.memory.used_percent}%` : '-';
+            ids.webAddress.textContent = `${web.host || '-'}:${web.port || '-'}`;
+            ids.nodeMemory.textContent = server.node ? `${server.node.memory_mb} MB` : '-';
+            const cashException = services.cash_exception || {};
+            const cashExceptionData = cashException.cash_exception || {};
+            const cashboxEstimator = services.cashbox_estimator || {};
+            const cashboxEstimatorData = cashboxEstimator.cashbox_estimator || {};
+            setPill(ids.rp5Service, services.rp5 && services.rp5.active, services.rp5 && services.rp5.active ? 'active' : 'stopped');
+            setPill(ids.kitchenDcService, services.kitchen_dc && services.kitchen_dc.active, services.kitchen_dc && services.kitchen_dc.active ? 'active' : 'stopped');
+            const cashExceptionAlert = cashException.active && Number(cashExceptionData.notifications_today || 0) > 0;
+            setPill(ids.cashExceptionService, cashException.active && !cashExceptionAlert, cashException.active ? 'active' : 'stopped', cashExceptionAlert ? 'danger' : undefined);
+            ids.cashExceptionService.title = cashExceptionAlert
+                ? `今日故障通知 ${cashExceptionData.notifications_today} 次`
+                : (cashExceptionData.heartbeat_error || cashExceptionData.state_error || '');
+            const clearMismatch = Boolean(cashboxEstimatorData.cashbox_clear_mismatch);
+            if (cashboxEstimator.active && clearMismatch) {
+                setPill(ids.cashboxEstimatorService, false, 'active', 'danger');
+            } else if (cashboxEstimator.active && cashboxEstimatorData.heartbeat_status === 'error') {
+                setPill(ids.cashboxEstimatorService, false, 'active', 'danger');
+            } else {
+                setPill(ids.cashboxEstimatorService, cashboxEstimator.active, cashboxEstimator.active ? 'active' : 'stopped');
+            }
+            ids.cashboxEstimatorService.title = cashboxEstimatorData.latest_generated_at
+                ? `latest=${cashboxEstimatorData.latest_generated_at} variance=${money(cashboxEstimatorData.pos_vs_cash_db_variance)}`
+                : (cashboxEstimatorData.heartbeat_error || cashboxEstimatorData.estimate_error || '');
+            setControlButton(ids.cashExceptionToggle, cashException.active);
+            setControlButton(ids.cashboxEstimatorToggle, cashboxEstimator.active);
+            setControlButton(ids.rp5Toggle, services.rp5 && services.rp5.active);
+            setControlButton(ids.kitchenDcToggle, services.kitchen_dc && services.kitchen_dc.active);
+            renderFaultCodes(cashException);
+            setPill(ids.kioskConnection, kiosk.ok, kiosk.ok ? 'online' : 'offline');
+            ids.kioskLatency.textContent = kiosk.latency_ms == null ? '-' : `${kiosk.latency_ms} ms`;
+            ids.kioskSuccess.textContent = kiosk.last_success_at ? new Date(kiosk.last_success_at).toLocaleTimeString('zh-TW', { hour12: false }) : '-';
+            const cash = kiosk.cash_finance || {};
+            ids.kioskSalesFreshness.textContent = freshnessText(kiosk.sales || kiosk);
+            ids.kioskCashFreshness.textContent = freshnessText(cash);
+            ids.kioskLatestOrder.textContent = kiosk.local_latest_order_time ? String(kiosk.local_latest_order_time).slice(11, 19) : '-';
+            ids.kioskSyncError.textContent = dateTimeShort(kiosk.latest_sync_error_at);
+            ids.kioskSyncError.title = kiosk.latest_sync_error_message ? `${kiosk.latest_sync_error_source || 'sync'}: ${kiosk.latest_sync_error_message}` : '';
+            ids.kioskCorrection.textContent = dateTimeShort(kiosk.latest_correction_at);
+            ids.kioskCorrection.title = kiosk.latest_correction_reason ? `${kiosk.latest_correction_source || 'sync'}: ${kiosk.latest_correction_reason}` : '';
+            ids.cashUsableTotal.textContent = money(cash.usable_total_amount);
+            ids.cashBoxAmount.textContent = cash.cashbox && cash.cashbox.system_amount != null ? money(cash.cashbox.system_amount) : '-';
+            ids.cashboxEstimateAmount.textContent = cashboxEstimatorData.cashbox_estimated_amount == null ? '-' : money(cashboxEstimatorData.cashbox_estimated_amount);
+            const unpostedDiff = cashboxEstimatorData.cashbox_unposted_difference ?? cashboxEstimatorData.cash_sales_minus_cashbox_flow;
+            ids.cashboxUnpostedDiff.textContent = unpostedDiff == null ? '-' : money(unpostedDiff);
+            ids.cashBoxAmount.classList.toggle('danger-value', clearMismatch);
+            ids.cashboxEstimateAmount.classList.toggle('danger-value', clearMismatch);
+            const clearTitle = clearMismatch
+                ? `清鈔=${money(cashboxEstimatorData.cashbox_clear_actual_amount)} 推算=${money(cashboxEstimatorData.cashbox_clear_expected_amount)} 差異=${money(cashboxEstimatorData.cashbox_clear_difference)}`
+                : '';
+            ids.cashBoxAmount.title = clearTitle;
+            ids.cashboxEstimateAmount.title = cashboxEstimatorData.latest_generated_at ? `推算時間 ${cashboxEstimatorData.latest_generated_at}` : '';
+            ids.cashboxUnpostedDiff.title = cashboxEstimatorData.latest_generated_at ? `錢箱推算 - DB 已確認進錢箱；推算時間 ${cashboxEstimatorData.latest_generated_at}` : '';
+            ids.cashLastSync.textContent = cash.last_success_at ? new Date(cash.last_success_at).toLocaleTimeString('zh-TW', { hour12: false }) : '-';
+            ids.cashLatestRecord.textContent = timeOnly(cash.local_latest_time);
+            ids.cashDenom500.textContent = denomQuantity(cash, 500);
+            ids.cashDenom100.textContent = denomQuantity(cash, 100);
+            ids.cashDenom50.textContent = denomQuantity(cash, 50);
+            ids.cashDenom10.textContent = denomQuantity(cash, 10);
+            ids.cashDenom5.textContent = denomQuantity(cash, 5);
+            ids.cashDenom1.textContent = denomQuantity(cash, 1);
+        }
+
+        async function refresh() {
+            const statusParts = [];
+            try { await refreshPi(); } catch (error) { statusParts.push('樹莓派錯誤'); }
+            try { await refreshServer(); } catch (error) { statusParts.push('伺服器錯誤'); }
+
+            try {
+                ids.errorPanel.hidden = true;
+                const response = await fetch('/api/sales/today', { cache: 'no-store' });
+                const data = await response.json();
+                if (!data.ok && !data.stale) throw new Error(data.error || '售票機讀取失敗');
+                if (data.stale || data.offline) statusParts.push('售票機離線');
+
+                const summary = data.summary || {}; const month = data.month_summary || {};
+                animateNumber(ids.orderCount, summary.order_count);
+                animateNumber(ids.bowlCount, summary.bowl_count);
+                animateNumber(ids.paymentAmount, summary.net_sales_amount ?? summary.payment_amount, money);
+                ids.latestOrder.textContent = timeOnly(summary.latest_order_time);
+                animateNumber(ids.monthBowls, month.month_bowls);
+                animateNumber(ids.avgBowls, month.avg_bowls_calendar, decimal);
+                animateNumber(ids.monthRevenue, month.month_revenue, money);
+                animateNumber(ids.avgRevenue, month.avg_revenue_calendar, money);
+
+                ids.paymentSummary.innerHTML = (data.payments || []).map(payment => `
+                    <div class="payment-chip">
+                        <span>${payment.payment_type || '-'}</span>
+                        <strong>${money(payment.net_amount ?? payment.amount)} / ${payment.count || 0} 筆</strong>
+                    </div>
+                `).join('') || '<div class="payment-chip"><span>付款方式</span><strong>-</strong></div>';
+
+                const salesBuckets = (data.sales_buckets || []).map(bucket => ({
+                    ...bucket,
+                    business_date: bucket.business_date || summary.business_date,
+                }));
+                saveJson(SALES_HISTORY_KEY, salesBuckets);
+                drawSalesBuckets(ids.salesRiver, salesBuckets, { ...getScaleOptions('sales'), businessDate: summary.business_date });
+
+            } catch (error) {
+                showError(error, OFFLINE_SALES_MESSAGE); statusParts.push('售票機讀取失敗');
+            }
+
+            const nowText = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+            ids.status.textContent = statusParts.length > 0 ? `${statusParts.join('/')} · ${nowText}` : `更新 ${nowText}`;
+        }
+
+        setupPanels();
+        setupControls();
+        setupServiceLogPills();
+        setupLogDialog();
+        setupAudioControls();
+        setupKioskLiveScreen();
+        setupRiverHover(ids.salesRiver, drawSalesHistory);
+        setupRiverHover(ids.tempRiver, drawTempHistory);
+        ids.salesScale.value = localStorage.getItem('6ka.scale.sales') || 'auto';
+        ids.tempScale.value = localStorage.getItem('6ka.scale.temperature') || 'auto';
+        ids.salesScale.addEventListener('change', () => { localStorage.setItem('6ka.scale.sales', ids.salesScale.value); drawSalesHistory(); });
+        ids.tempScale.addEventListener('change', () => { localStorage.setItem('6ka.scale.temperature', ids.tempScale.value); drawTempHistory(); });
+        refresh(); setInterval(refresh, 10000);
+        window.addEventListener('resize', () => { drawSalesHistory(); drawTempHistory(); });
+    </script>
+</body>
+</html>

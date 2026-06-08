@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="花">
+  <rect width="64" height="64" rx="14" fill="#0a0705"/>
+  <rect x="9" y="7" width="46" height="50" rx="7" fill="#f7f1e3"/>
+  <path d="M16 18c9 1 21-1 31-4M28 8c0 13-1 28-7 45M39 9c-3 11-4 22-4 45M17 34c11-8 23-10 35-7M28 34c-5 7-10 12-17 17M35 34c6 8 11 13 18 17" fill="none" stroke="#0d0b09" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M18 19c8 0 19-2 30-5M17 35c12-8 22-9 34-7M28 9c0 14-1 29-7 44M39 10c-3 10-4 25-3 44" fill="none" stroke="#211713" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+</svg>

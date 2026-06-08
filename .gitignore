@@ -1,0 +1,76 @@
+# Local secrets and credentials
+.env
+.env.*
+!.env.example
+*.local.*
+*.local
+.ssh/
+*.pem
+*.key
+*.pfx
+*.p12
+id_rsa
+id_ed25519
+cash_diff_push_token.local.txt
+
+# Runtime databases, backups, dumps, and local state
+data/
+backups/
+*.sqlite
+*.sqlite3
+*.db
+*.db3
+*.bak
+*.bak-*
+*.backup
+*.backup-*
+*.dump
+*.sql
+*.pid
+
+# Logs and process output
+logs/
+*.log
+*.out
+*.err
+
+# Generated exports, reports, screenshots, and release bundles
+exports/
+outputs/
+uploads/
+runtime/
+tmp/
+temp/
+github-pages-6ka/
+
+# Dependency, cache, and generated build folders
+node_modules/
+vendor/
+dist/
+build/
+.cache/
+.wrangler/
+__pycache__/
+.pycache/
+*.py[cod]
+
+# Compiled binaries
+*.exe
+*.dll
+*.pdb
+*.obj
+*.bin
+x64/
+x86/
+
+# Live Cloudflare/Wrangler config with environment-specific IDs
+wrangler.cash-diff.toml
+wrangler.cash-diff.example.toml
+deliverables/cash-diff-cloudflare/wrangler.cash-diff.toml
+
+# Nested Git metadata from copied/deployed site folders
+**/.git/
+
+# TODO: confirm whether these should be committed before initial commit:
+# - root backup source snapshots such as index.html.before-* and server.js.work
+# - whether to replace ignored live wrangler files with redacted examples only

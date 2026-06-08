@@ -1,0 +1,1 @@
+djay ALL=(root) NOPASSWD: /bin/systemctl start order_notify.service, /bin/systemctl stop order_notify.service, /bin/systemctl restart order_notify.service, /bin/systemctl start switchbot_temp_monitor.service, /bin/systemctl stop switchbot_temp_monitor.service, /bin/systemctl restart switchbot_temp_monitor.service, /sbin/reboot, /usr/sbin/reboot

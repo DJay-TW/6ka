@@ -1,0 +1,7 @@
+name = "cash-diff-api"
+main = "cloudflare_cash_api_worker.js"
+compatibility_date = "2026-06-01"
+
+[[kv_namespaces]]
+binding = "CASH_DIFF"
+id = "REPLACE_WITH_CLOUDFLARE_KV_NAMESPACE_ID"

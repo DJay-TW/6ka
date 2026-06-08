@@ -1,0 +1,18 @@
+[Unit]
+Description=6KA Pi Agent
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/djay/bin
+Environment=PYTHONUNBUFFERED=1
+Environment=PI_AGENT_HOST=100.114.19.115
+Environment=PI_AGENT_PORT=3011
+ExecStart=/usr/bin/python3 -u /home/djay/bin/6ka_pi_agent.py
+Restart=always
+RestartSec=5
+StandardOutput=append:/home/djay/bin/6ka_pi_agent.log
+StandardError=append:/home/djay/bin/6ka_pi_agent.log
+
+[Install]
+WantedBy=default.target
