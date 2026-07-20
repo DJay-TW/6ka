@@ -427,7 +427,6 @@
 <script>
 (() => {
   const CASH_API_URL = "https://6ka-cash-diff-api.jay-fbf.workers.dev/api/cash/current";
-  const CASH_DIFF_UI_VERSION = "2026.07.20-canonical-cashbox-only.3";
   
   const denomConfigs = [
     { value: 1,   kanji: "壱圓",   kana: "▸ 保留数 10" },
@@ -874,17 +873,11 @@
     lines.push(`實際 ${fmtMoney(bTotal)}`);
     lines.push(`差值 ${fmtMoney(bTotal - aTotal)}`);
 
-    if (state.cashboxSystem === "") {
-      lines.push("系統錢箱 待覆核");
-      lines.push(`實際錢箱 ${fmtMoney(Number(state.cashboxActual || 0))}`);
-      lines.push("差值 待覆核");
-    } else {
-      const cashboxSystem = Number(state.cashboxSystem);
-      const cashboxActual = Number(state.cashboxActual || 0);
-      lines.push(`系統錢箱 ${fmtMoney(cashboxSystem)}`);
-      lines.push(`實際錢箱 ${fmtMoney(cashboxActual)}`);
-      lines.push(`差值 ${fmtMoney(cashboxActual - cashboxSystem)}`);
-    }
+    const cashboxSystem = Number(state.cashboxSystem || 0);
+    const cashboxActual = Number(state.cashboxActual || 0);
+    lines.push(`系統錢箱 ${fmtMoney(cashboxSystem)}`);
+    lines.push(`實際錢箱 ${fmtMoney(cashboxActual)}`);
+    lines.push(`差值 ${fmtMoney(cashboxActual - cashboxSystem)}`);
     outEl.value = lines.join("\n");
   }
 
@@ -953,32 +946,19 @@
     const response = await fetch(CASH_API_URL, { cache: "no-store" });
     const payload = await response.json();
     if (!payload.ok) throw new Error("▪︎SYNC_FAILED");
-    const financeMirrorOk = payload.finance_mirror_ok === true
-      && payload.finance_mirror_state === "in_sync";
     denoms.forEach(denom => {
       const row = payload.denominations && payload.denominations[String(denom)];
-      state[denom].a = financeMirrorOk && row && row.quantity != null ? String(row.quantity) : "";
+      state[denom].a = row && row.quantity != null ? String(row.quantity) : "";
     });
-    const cashbox = payload.cashbox || {};
-    const confirmedCashbox = financeMirrorOk
-      && cashbox.confirmation === "confirmed"
-      && cashbox.mirror_state === "in_sync"
-      && (cashbox.clear_source === "CashRecord" || cashbox.clear_source === "SettlementDetail")
-      && Number.isSafeInteger(cashbox.system_amount);
-    state.cashboxSystem = confirmedCashbox ? String(cashbox.system_amount) : "";
+    if (payload.cashbox && payload.cashbox.system_amount != null) {
+      state.cashboxSystem = String(payload.cashbox.system_amount);
+    }
     cashboxSystemEl.value = state.cashboxSystem;
-    cashboxSystemEl.placeholder = confirmedCashbox ? "INPUT" : "待覆核";
     buildRows();
     update();
-    const total = financeMirrorOk && Number.isSafeInteger(payload.usable_total_amount)
-      ? fmtMoney(payload.usable_total_amount)
-      : "待覆核";
+    const total = fmtMoney(payload.usable_total_amount);
     const time = payload.generated_at ? new Date(payload.generated_at).toLocaleTimeString("zh-TW", { hour12: false }) : "-";
-    sourceInfoEl.textContent = !financeMirrorOk
-      ? `▪︎財務資料待覆核 [${time}]`
-      : confirmedCashbox
-        ? `▪︎最終同期値: ${total} [${time}]`
-        : `▪︎最終同期値: ${total} [${time}] / 清鈔待覆核`;
+    sourceInfoEl.textContent = `▪︎最終同期値: ${total} [${time}]`;
     bump("▪︎Online");
   }
 
